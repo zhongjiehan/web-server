@@ -3,241 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>公司AI工具导航</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#3b82f6',
-                        secondary: '#6366f1',
-                        dark: '#1e293b',
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                }
-            }
+    <title>百奥药业 AI工具导航</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
         }
-    </script>
-    <style type="text/tailwindcss">
-        @layer utilities {
-            .card-hover {
-                @apply transition-all duration-300 hover:scale-105 hover:shadow-lg hover:-translate-y-1;
+
+        body {
+            background-color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #165DFF 0%, #36CFC9 100%);
+            color: white;
+            padding: 48px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 32px;
+        }
+
+        .search-box {
+            max-width: 400px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 48px 14px 20px;
+            border: none;
+            border-radius: 9999px;
+            font-size: 16px;
+            outline: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box::after {
+            content: "🔍";
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 48px 20px;
+        }
+
+        .section {
+            margin-bottom: 48px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 16px;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .card-desc {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .footer {
+            background-color: #1e293b;
+            color: white;
+            text-align: center;
+            padding: 32px 20px;
+            margin-top: 48px;
+        }
+
+        .footer p {
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
             }
-            .gradient-bg {
-                @apply bg-gradient-to-br from-primary to-secondary;
+            
+            .cards-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 16px;
             }
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- 头部 -->
-    <header class="gradient-bg text-white py-12 shadow-md">
-        <div class="container mx-auto px-4 text-center">
-            <h1 class="text-4xl font-bold mb-2">公司AI工具导航</h1>
-            <p class="text-lg opacity-90">一站式访问所有AI工具，提升工作效率</p>
-            
-            <!-- 搜索框 -->
-            <div class="max-w-md mx-auto mt-8">
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        id="searchInput" 
-                        placeholder="搜索AI工具..." 
-                        class="w-full px-5 py-3 rounded-full text-gray-800 focus:outline-none focus:ring-4 focus:ring-white/30"
-                    >
-                    <i class="fas fa-search absolute right-5 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                </div>
-            </div>
+<body>
+    <header class="header">
+        <h1>百奥药业 AI工具导航</h1>
+        <p>一站式访问所有AI工具，提升工作效率</p>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="搜索AI工具...">
         </div>
     </header>
 
-    <!-- 主要内容 -->
-    <main class="container mx-auto px-4 py-12">
+    <main class="container">
+        <!-- 公司内部系统 -->
+        <section class="section">
+            <h2 class="section-title">🏢 公司内部系统</h2>
+            <div class="cards-grid">
+                <a href="http://111.198.68.228:5000" target="_blank" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background-color: #dbeafe; color: #2563eb;">💾</div>
+                        <h3 class="card-title">百奥NAS系统</h3>
+                    </div>
+                    <p class="card-desc">公司文件存储与管理</p>
+                </a>
+            </div>
+        </section>
+
         <!-- 文本大模型 -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold text-dark mb-6 flex items-center">
-                <i class="fas fa-comments text-primary mr-3"></i>
-                文本大模型
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <a href="https://chat.openai.com" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-robot text-green-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">ChatGPT</h3>
+        <section class="section">
+            <h2 class="section-title">💬 文本大模型</h2>
+            <div class="cards-grid">
+                <a href="https://chat.openai.com" target="_blank" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background-color: #dcfce7; color: #16a34a;">🤖</div>
+                        <h3 class="card-title">ChatGPT</h3>
                     </div>
-                    <p class="text-gray-600 text-sm">OpenAI官方，GPT-4o模型</p>
+                    <p class="card-desc">OpenAI官方，GPT-4o模型</p>
                 </a>
-
-                <a href="https://claude.ai" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-brain text-orange-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">Claude</h3>
+                <a href="https://claude.ai" target="_blank" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background-color: #ffedd5; color: #ea580c;">🧠</div>
+                        <h3 class="card-title">Claude</h3>
                     </div>
-                    <p class="text-gray-600 text-sm">Anthropic，长文档处理最强</p>
+                    <p class="card-desc">Anthropic，长文档处理最强</p>
                 </a>
-
-                <a href="https://chat.deepseek.com" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-code text-blue-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">DeepSeek</h3>
+                <a href="https://chat.deepseek.com" target="_blank" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background-color: #dbeafe; color: #2563eb;">💻</div>
+                        <h3 class="card-title">DeepSeek</h3>
                     </div>
-                    <p class="text-gray-600 text-sm">国产最强代码模型</p>
+                    <p class="card-desc">国产最强代码模型</p>
                 </a>
-
-                <a href="https://yiyan.baidu.com" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-lightbulb text-purple-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">文心一言</h3>
+                <a href="https://yiyan.baidu.com" target="_blank" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background-color: #f3e8ff; color: #9333ea;">💡</div>
+                        <h3 class="card-title">文心一言</h3>
                     </div>
-                    <p class="text-gray-600 text-sm">百度，中文理解优秀</p>
+                    <p class="card-desc">百度，中文理解优秀</p>
                 </a>
             </div>
         </section>
 
         <!-- 图像生成 -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold text-dark mb-6 flex items-center">
-                <i class="fas fa-image text-primary mr-3"></i>
-                图像生成
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <a href="https://www.midjourney.com" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-paint-brush text-indigo-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">Midjourney</h3>
+        <section class="section">
+            <h2 class="section-title">🖼️ 图像生成</h2>
+            <div class="cards-grid">
+                <a href="https://www.midjourney.com" target="_blank" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background-color: #e0e7ff; color: #4f46e5;">🎨</div>
+                        <h3 class="card-title">Midjourney</h3>
                     </div>
-                    <p class="text-gray-600 text-sm">业界标杆，生成质量最高</p>
+                    <p class="card-desc">业界标杆，生成质量最高</p>
                 </a>
-
-                <a href="https://www.dall-e.com" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-teal-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-palette text-teal-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">DALL-E 3</h3>
+                <a href="https://www.dall-e.com" target="_blank" class="card">
+                    <div class="card-header">
+                        <div class="card-icon" style="background-color: #ccfbf1; color: #0d9488;">🎭</div>
+                        <h3 class="card-title">DALL-E 3</h3>
                     </div>
-                    <p class="text-gray-600 text-sm">OpenAI，文字理解精准</p>
-                </a>
-
-                <a href="https://flux.ai" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-magic text-amber-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">Flux</h3>
-                    </div>
-                    <p class="text-gray-600 text-sm">最新开源模型，效果惊艳</p>
-                </a>
-            </div>
-        </section>
-
-        <!-- 代码助手 -->
-        <section class="mb-16">
-            <h2 class="text-2xl font-bold text-dark mb-6 flex items-center">
-                <i class="fas fa-code text-primary mr-3"></i>
-                代码助手
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <a href="https://cursor.sh" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-terminal text-gray-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">Cursor</h3>
-                    </div>
-                    <p class="text-gray-600 text-sm">AI代码编辑器，必备神器</p>
-                </a>
-
-                <a href="https://github.com/copilot" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-black flex items-center justify-center mr-4">
-                            <i class="fab fa-github text-white text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">GitHub Copilot</h3>
-                    </div>
-                    <p class="text-gray-600 text-sm">VS Code代码补全</p>
-                </a>
-            </div>
-        </section>
-
-        <!-- 其他工具 -->
-        <section>
-            <h2 class="text-2xl font-bold text-dark mb-6 flex items-center">
-                <i class="fas fa-tools text-primary mr-3"></i>
-                其他工具
-            </h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <a href="https://www.notion.so/product/ai" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-sticky-note text-gray-800 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">Notion AI</h3>
-                    </div>
-                    <p class="text-gray-600 text-sm">笔记与写作助手</p>
-                </a>
-
-                <a href="https://openai.com/whisper" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-microphone text-red-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">Whisper</h3>
-                    </div>
-                    <p class="text-gray-600 text-sm">语音转文字</p>
-                </a>
-
-                <a href="https://www.runwayml.com" target="_blank" class="bg-white rounded-xl p-6 shadow card-hover">
-                    <div class="flex items-center mb-4">
-                        <div class="w-12 h-12 rounded-lg bg-pink-100 flex items-center justify-center mr-4">
-                            <i class="fas fa-video text-pink-600 text-xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold">Runway</h3>
-                    </div>
-                    <p class="text-gray-600 text-sm">AI视频生成</p>
+                    <p class="card-desc">OpenAI，文字理解精准</p>
                 </a>
             </div>
         </section>
     </main>
 
-    <!-- 页脚 -->
-    <footer class="bg-dark text-white py-8 mt-12">
-        <div class="container mx-auto px-4 text-center">
-            <p class="opacity-70">© 2026 公司名称. 内部使用，请勿外传.</p>
-        </div>
+    <footer class="footer">
+        <p>© 2026 百奥药业 BAIAO PHARM. 内部使用，请勿外传.</p>
     </footer>
 
-    <!-- 搜索功能 -->
     <script>
         const searchInput = document.getElementById('searchInput');
-        const allCards = document.querySelectorAll('.card-hover');
+        const allCards = document.querySelectorAll('.card');
 
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
-            
             allCards.forEach(card => {
-                const title = card.querySelector('h3').textContent.toLowerCase();
-                const description = card.querySelector('p').textContent.toLowerCase();
-                
-                if (title.includes(searchTerm) || description.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
+                const title = card.querySelector('.card-title').textContent.toLowerCase();
+                const description = card.querySelector('.card-desc').textContent.toLowerCase();
+                card.style.display = (title.includes(searchTerm) || description.includes(searchTerm)) ? 'block' : 'none';
             });
         });
     </script>
