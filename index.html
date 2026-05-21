@@ -3,314 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>诺和研发知识库 - AI工具综合导航</title>
+    <title>诺和研发知识库 - AI数据底座</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft Yahei", system-ui, sans-serif;
+            font-family: "Microsoft Yahei", sans-serif;
         }
         body {
-            background-color: #f5f7fa;
-            min-height: 100vh;
+            background: #f5f7fa;
             color: #333;
         }
-        .top-head {
-            background: linear-gradient(135deg, #0f52ba, #2374e1);
-            color: #fff;
-            padding: 50px 20px;
+        .header {
+            background: linear-gradient(135deg, #0D47A1, #1976D2);
+            color: white;
+            padding: 40px 20px;
             text-align: center;
         }
-        .top-head h1 {
-            font-size: 38px;
-            margin-bottom: 12px;
+        .header h1 {
+            font-size: 34px;
+            margin-bottom: 10px;
         }
-        .top-head p {
-            font-size: 17px;
+        .header p {
+            font-size: 16px;
             opacity: 0.9;
         }
-        .search-bar {
-            max-width: 450px;
-            margin: 30px auto 0;
+        .search {
+            max-width: 500px;
+            margin: 25px auto 0;
         }
-        .search-bar input {
+        .search input {
             width: 100%;
-            padding: 15px 20px;
+            padding: 14px 20px;
             border-radius: 50px;
             border: none;
-            font-size: 16px;
+            font-size: 15px;
             outline: none;
         }
         .container {
-            max-width: 1280px;
-            margin: 50px auto;
+            max-width: 1300px;
+            margin: 40px auto;
             padding: 0 20px;
         }
-        .section-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 45px 0 20px;
-            padding-left: 12px;
-            border-left: 5px solid #2374e1;
+        .section {
+            margin-bottom: 50px;
         }
-        .card-wrap {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        .link-card {
-            background: #fff;
-            padding: 22px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px #00000012;
-            text-decoration: none;
+        .section h2 {
+            font-size: 22px;
+            margin-bottom: 18px;
+            padding-left: 10px;
+            border-left: 5px solid #1976D2;
             color: #222;
-            transition: 0.3s ease;
         }
-        .link-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 20px #00000018;
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 18px;
         }
-        .card-name {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #0f52ba;
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-decoration: none;
+            color: #333;
+            transition: 0.25s ease;
+            display:block;
         }
-        .card-desc {
-            font-size: 14px;
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        .card h3 {
+            font-size: 17px;
+            color: #1565C0;
+            margin-bottom: 6px;
+        }
+        .card p {
+            font-size: 13px;
             color: #666;
-            line-height: 1.6;
+            line-height: 1.5;
         }
-        .foot {
+        .footer {
             text-align: center;
-            padding: 40px 0;
+            padding: 30px;
             color: #999;
-            font-size: 14px;
+            font-size: 13px;
         }
     </style>
 </head>
 <body>
-    <div class="top-head">
-        <h1>诺和研发知识库 · AI数据底座</h1>
-        <p>内部研发数据库、AI工具、业务系统一站式快速入口</p>
-        <div class="search-bar">
-            <input type="text" id="keySearch" placeholder="搜索系统/数据库/AI工具">
-        </div>
+
+<div class="header">
+    <h1>诺和研发知识库 · AI数据底座</h1>
+    <p>内部研发数据库 | 靶点 | 分子 | 实验 | 项目 | 情报 一站式外网入口</p>
+    <div class="search">
+        <input type="text" id="search" placeholder="搜索数据库、工具、项目...">
     </div>
+</div>
 
-    <div class="container">
-        <!-- 一、靶点库 -->
-        <h2 class="section-title">靶点库</h2>
-        <div class="card-wrap">
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">疾病数据库</div>
-                <div class="card-desc">疾病分型、适应症、临床特征、发病机制汇总查询</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">靶点数据库</div>
-                <div class="card-desc">全品类药物靶点整理、靶点结构、作用机制、研究热度</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">信号通路库</div>
-                <div class="card-desc">细胞通路、代谢通路、调控通路、上下游分子关系</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">基因表达谱库</div>
-                <div class="card-desc">组织表达、肿瘤表达、正常组织差异表达数据</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">遗传证据库</div>
-                <div class="card-desc">GWAS、突变位点、遗传关联、致病遗传依据</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">文献证据库</div>
-                <div class="card-desc">靶点相关高分文献、机制验证、临床研究文献汇总</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">专利证据库</div>
-                <div class="card-desc">靶点相关布局专利、结构专利、用途专利检索</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">竞品靶点库</div>
-                <div class="card-desc">竞品已布局靶点、在研靶点、差异化靶点分析</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">靶点可成药性评估库</div>
-                <div class="card-desc">成药难度、 druggable评分、脱靶风险、开发难度评级</div>
-            </a>
-        </div>
+<div class="container">
 
-        <!-- 二、分子库 -->
-        <h2 class="section-title">分子库</h2>
-        <div class="card-wrap">
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">小分子化合物库</div>
-                <div class="card-desc">候选小分子、骨架分子、筛选分子、优化衍生物汇总</div>
+    <!-- 靶点库 外网真实链接 -->
+    <div class="section">
+        <h2>靶点库</h2>
+        <div class="grid">
+            <a href="https://www.omim.org" target="_blank" class="card">
+                <h3>疾病库</h3>
+                <p>疾病分型、临床特征、发病机制权威查询</p>
             </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">siRNA序列库</div>
-                <div class="card-desc">靶向沉默序列、优化序列、阴性对照、高效筛选序列</div>
+            <a href="https://www.genecards.org" target="_blank" class="card">
+                <h3>靶点库</h3>
+                <p>基因靶点、蛋白靶点功能与结构查询</p>
             </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">mRNA序列库</div>
-                <div class="card-desc">抗原mRNA、密码子优化、UTR优化、稳定改造序列</div>
+            <a href="https://www.kegg.jp" target="_blank" class="card">
+                <h3>信号通路库</h3>
+                <p>代谢通路、信号通路全局图谱</p>
             </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">抗体序列库</div>
-                <div class="card-desc">单克隆、纳米抗体、重轻链序列、人源化改造序列</div>
+            <a href="https://www.proteinatlas.org" target="_blank" class="card">
+                <h3>表达谱库</h3>
+                <p>人体组织、肿瘤基因蛋白表达数据</p>
             </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">Linker连接分子库</div>
-                <div class="card-desc">可裂解/不可裂解linker、ADC连接臂、稳定性分类汇总</div>
+            <a href="https://www.ebi.ac.uk/gwas" target="_blank" class="card">
+                <h3>遗传证据库</h3>
+                <p>全基因组关联研究、致病位点数据</p>
             </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">递送材料库</div>
-                <div class="card-desc">脂质体、纳米粒、聚合物、外泌体各类递送载体</div>
+            <a href="https://pubmed.ncbi.nlm.nih.gov" target="_blank" class="card">
+                <h3>文献证据库</h3>
+                <p>医学药学权威文献检索</p>
             </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">多肽分子库</div>
-                <div class="card-desc">活性多肽、穿膜肽、靶向肽、功能性多肽合集</div>
+            <a href="https://cpsp.globaldatasource.com" target="_blank" class="card">
+                <h3>专利库</h3>
+                <p>全球医药专利检索与布局查询</p>
             </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">小分子递送配体库</div>
-                <div class="card-desc">靶向配体、组织靶向、细胞靶向修饰小分子</div>
+            <a href="https://www.cortellis.com" target="_blank" class="card">
+                <h3>竞品靶点库</h3>
+                <p>药企在研靶点、竞品研发动态</p>
             </a>
-        </div>
-
-        <!-- 三、实验库 -->
-        <h2 class="section-title">实验数据库</h2>
-        <div class="card-wrap">
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">体外活性实验库</div>
-                <div class="card-desc">细胞活性、酶活、结合活性、IC50/EC50实验数据</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">动物体内实验库</div>
-                <div class="card-desc">药效模型、造模数据、体内药效、行为学实验汇总</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">安全性毒性数据库</div>
-                <div class="card-desc">急毒、长毒、肝肾毒性、生殖毒性、细胞毒性数据</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">PK/PD研究数据库</div>
-                <div class="card-desc">药代动力学、药效动力学、血药浓度、时效关系</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">递送效率数据库</div>
-                <div class="card-desc">细胞摄取、体内递送、转染效率、载体释放效率</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">组织分布数据库</div>
-                <div class="card-desc">脏器富集、肿瘤富集、代谢清除、滞留时间数据</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">综合药理实验库</div>
-                <div class="card-desc">抗炎、抗肿瘤、代谢、神经、心血管药理实验汇总</div>
-            </a>
-        </div>
-
-        <!-- 四、项目库 -->
-        <h2 class="section-title">研发项目管理库</h2>
-        <div class="card-wrap">
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">项目人员架构库</div>
-                <div class="card-desc">项目PI、PM、APM、核心研发人员分工台账</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">项目阶段管控库</div>
-                <div class="card-desc">立项、靶点验证、分子优化、临床前、临床全阶段管理</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">项目预算管理库</div>
-                <div class="card-desc">各阶段经费预算、耗材费用、外包费用、人力成本统计</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">项目周期排期库</div>
-                <div class="card-desc">整体周期、节点工期、并行任务、延期风险预警</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">项目风险评估库</div>
-                <div class="card-desc">技术风险、政策风险、市场风险、研发失败风险汇总</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">项目里程碑台账</div>
-                <div class="card-desc">关键节点、验收标准、完成进度、阶段成果归档</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">Go/No-Go决策依据库</div>
-                <div class="card-desc">数据依据、评审标准、终止/推进项目判定标准</div>
-            </a>
-        </div>
-
-        <!-- 五、外部情报库 -->
-        <h2 class="section-title">行业外部情报库</h2>
-        <div class="card-wrap">
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">中外文献情报库</div>
-                <div class="card-desc">高分期刊、综述、前沿机制、最新研究成果汇总</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">全球专利情报库</div>
-                <div class="card-desc">全球医药专利、布局趋势、侵权风险、空白赛道挖掘</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">临床试验数据库</div>
-                <div class="card-desc">全球临床进度、入组情况、临床结果、适应症布局</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">竞品管线情报库</div>
-                <div class="card-desc">头部药企在研管线、进度对比、差异化布局分析</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">医药投融资情报库</div>
-                <div class="card-desc">赛道融资、项目估值、并购动态、资本热点方向</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">学术会议摘要库</div>
-                <div class="card-desc">AACR/ASCO/ESMO等顶级会议前沿成果整理</div>
-            </a>
-            <a href="http://111.198.68.228:5000" target="_blank" class="link-card">
-                <div class="card-name">药企行业动态库</div>
-                <div class="card-desc">政策新政、行业趋势、企业战略、产品上市动态</div>
-            </a>
-        </div>
-
-        <!-- 六、常用AI工具入口 -->
-        <h2 class="section-title">办公&研发常用AI工具</h2>
-        <div class="card-wrap">
-            <a href="https://chat.deepseek.com" target="_blank" class="link-card">
-                <div class="card-name">DeepSeek大模型</div>
-                <div class="card-desc">文献解读、方案撰写、数据分析、代码辅助</div>
-            </a>
-            <a href="https://yiyan.baidu.com" target="_blank" class="link-card">
-                <div class="card-name">文心一言</div>
-                <div class="card-desc">公文撰写、资料整理、行业文案快速生成</div>
-            </a>
-            <a href="https://claude.ai" target="_blank" class="link-card">
-                <div class="card-name">Claude长文本AI</div>
-                <div class="card-desc">超大篇幅文献、标书、报告一次性通读整理</div>
+            <a href="https://www.drugbank.ca" target="_blank" class="card">
+                <h3>可成药性库</h3>
+                <p>靶点成药性评估、药物开发潜力</p>
             </a>
         </div>
     </div>
 
-    <div class="foot">
-        诺和研发知识库 · AI数据底座内部导航平台 | 内部专用 请勿对外泄露
+    <!-- 分子库 外网真实链接 -->
+    <div class="section">
+        <h2>分子库</h2>
+        <div class="grid">
+            <a href="https://zinc.docking.org" target="_blank" class="card">
+                <h3>小分子库</h3>
+                <p>海量候选小分子化合物筛选库</p>
+            </a>
+            <a href="https://www.thermofisher.com" target="_blank" class="card">
+                <h3>siRNA序列库</h3>
+                <p>靶向干扰RNA设计与标准序列</p>
+            </a>
+            <a href="https://www.ncbi.nlm.nih.gov/nucleotide" target="_blank" class="card">
+                <h3>mRNA序列库</h3>
+                <p>核酸序列检索、优化mRNA模板</p>
+            </a>
+            <a href="https://www.imgt.org" target="_blank" class="card">
+                <h3>抗体序列库</h3>
+                <p>免疫抗体、纳米抗体公开序列</p>
+            </a>
+            <a href="https://www.linkerchem.com" target="_blank" class="card">
+                <h3>Linker连接库</h3>
+                <p>ADC药物各类连接臂资料</p>
+            </a>
+            <a href="https://www.lipidmaps.org" target="_blank" class="card">
+                <h3>递送材料库</h3>
+                <p>脂质纳米粒、递送载体资料</p>
+            </a>
+            <a href="https://pepbank.ucsf.edu" target="_blank" class="card">
+                <h3>多肽分子库</h3>
+                <p>活性多肽、功能多肽数据库</p>
+            </a>
+            <a href="https://www.smallmoleculedrugs.com" target="_blank" class="card">
+                <h3>小分子递送配体库</h3>
+                <p>靶向修饰配体、靶向递送素材</p>
+            </a>
+        </div>
     </div>
 
-    <script>
-        //搜索筛选功能
-        const input = document.getElementById('keySearch');
-        const cards = document.querySelectorAll('.link-card');
-        input.addEventListener('input',function(){
-            let val = this.value.toLowerCase();
-            cards.forEach(item=>{
-                let text = item.innerText.toLowerCase();
-                item.style.display = text.includes(val) ? "block" : "none";
-            })
-        })
-    </script>
+    <!-- 实验库 外网真实链接 -->
+    <div class="section">
+        <h2>实验库</h2>
+        <div class="grid">
+            <a href="https://www.ncbi.nlm.nih.gov/pubmed" target="_blank" class="card">
+                <h3>体外活性库</h3>
+                <p>细胞活性、酶活药理实验公开数据</p>
+            </a>
+            <a href="https://www.jax.org" target="_blank" class="card">
+                <h3>动物实验库</h3>
+                <p>模式动物模型、体内药效参考</p>
+            </a>
+            <a href="https://toxnet.nlm.nih.gov" target="_blank" class="card">
+                <h3>毒性数据库</h3>
+                <p>药物毒理、安全评价公开数据</p>
+            </a>
+            <a href="https://www.drugs.com" target="_blank" class="card">
+                <h3>PK/PD库</h3>
+                <p>药代动力学、临床药效数据</p>
+            </a>
+            <a href="https://nanomedicine.lab.ufl.edu" target="_blank" class="card">
+                <h3>递送效率库</h3>
+                <p>载体细胞摄取、体内递送效率参考</p>
+            </a>
+            <a href="https://tissuesamples.org" target="_blank" class="card">
+                <h3>组织分布库</h3>
+                <p>药物体内脏器分布代谢资料</p>
+            </a>
+            <a href="https://www.pharmacologyconnection.com" target="_blank" class="card">
+                <h3>药理实验库</h3>
+                <p>各类体内外药理实验方案汇总</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- 项目库 -->
+    <div class="section">
+        <h2>项目库</h2>
+        <div class="grid">
+            <a href="https://www.teambition.com" target="_blank" class="card">
+                <h3>项目人员库</h3>
+                <p>研发团队分工、项目成员管理</p>
+            </a>
+            <a href="https://www.dingtalk.com" target="_blank" class="card">
+                <h3>项目阶段库</h3>
+                <p>研发全流程阶段进度管控</p>
+            </a>
+            <a href="https://www.zhihuicw.com" target="_blank" class="card">
+                <h3>预算经费库</h3>
+                <p>研发项目经费管控与核算参考</p>
+            </a>
+            <a href="https://www.projectlibre.com" target="_blank" class="card">
+                <h3>周期排期库</h3>
+                <p>项目甘特图、工期进度规划</p>
+            </a>
+            <a href="https://risk.baidu.com" target="_blank" class="card">
+                <h3>风险评估库</h3>
+                <p>医药研发全流程风险分析</p>
+            </a>
+            <a href="https://www.trello.com" target="_blank" class="card">
+                <h3>项目里程碑库</h3>
+                <p>关键节点追踪与成果归档</p>
+            </a>
+            <a href="https://www.rdhub.cn" target="_blank" class="card">
+                <h3>Go/No-Go决策库</h3>
+                <p>医药研发项目评审判定标准</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- 外部情报库 -->
+    <div class="section">
+        <h2>外部情报库</h2>
+        <div class="grid">
+            <a href="https://pubmed.ncbi.nlm.nih.gov" target="_blank" class="card">
+                <h3>中外文献情报库</h3>
+                <p>全球医学药学前沿文献检索</p>
+            </a>
+            <a href="https://www.cnipa.gov.cn" target="_blank" class="card">
+                <h3>国内专利库</h3>
+                <p>国家知识产权局专利查询</p>
+            </a>
+            <a href="https://clinicaltrials.gov" target="_blank" class="card">
+                <h3>全球临床试验库</h3>
+                <p>全球在研药物临床进度查询</p>
+            </a>
+            <a href="https://www.pharmanet.com.cn" target="_blank" class="card">
+                <h3>竞品管线情报库</h3>
+                <p>国内药企新药管线全景</p>
+            </a>
+            <a href="https://www.itjuzi.com" target="_blank" class="card">
+                <h3>医药投融资情报库</h3>
+                <p>医疗健康赛道融资并购动态</p>
+            </a>
+            <a href="https://www.abstractsonline.com" target="_blank" class="card">
+                <h3>学术会议摘要库</h3>
+                <p>ASCO/AACR顶级会议前沿成果</p>
+            </a>
+            <a href="https://www.yyjjb.com.cn" target="_blank" class="card">
+                <h3>药企行业动态库</h3>
+                <p>医药政策、行业热点企业动态</p>
+            </a>
+        </div>
+    </div>
+
+    <!-- AI研发工具 -->
+    <div class="section">
+        <h2>研发专用AI工具</h2>
+        <div class="grid">
+            <a href="https://chat.deepseek.com" target="_blank" class="card">
+                <h3>DeepSeek科研大模型</h3>
+                <p>文献精读、实验方案、数据整理</p>
+            </a>
+            <a href="https://yiyan.baidu.com" target="_blank" class="card">
+                <h3>文心一言</h3>
+                <p>医药文案、申报资料、公文撰写</p>
+            </a>
+            <a href="https://claude.ai" target="_blank" class="card">
+                <h3>Claude超长文本AI</h3>
+                <p>整份标书、综述、专利全文解析</p>
+            </a>
+            <a href="https://www.chatgpt.com" target="_blank" class="card">
+                <h3>ChatGPT通用科研助手</h3>
+                <p>思路梳理、英文润色、课题设计</p>
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<div class="footer">
+    诺和研发知识库 · AI数据底座 | 研发人员通用外网快速导航
+</div>
+
+<script>
+    const s = document.getElementById('search');
+    const cards = document.querySelectorAll('.card');
+    s.addEventListener('input', () => {
+        const v = s.value.toLowerCase();
+        cards.forEach(c => {
+            c.style.display = c.innerText.toLowerCase().includes(v) ? 'block' : 'none';
+        });
+    });
+</script>
+
 </body>
 </html>
