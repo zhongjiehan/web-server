@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUNNOVO · 单细胞靶点发现模型</title>
+  <style>
+    :root{
+      --primary:#075985;
+      --primary-2:#0e7490;
+      --primary-3:#0891b2;
+      --ink:#0f172a;
+      --muted:#64748b;
+      --soft:#e0f2fe;
+      --soft-2:#f0f9ff;
+      --line:#dbe7f0;
+      --card:#ffffff;
+      --bg:#f4f8fb;
+      --good:#00a889;
+      --warn:#f97316;
+      --danger:#ef4444;
+      --purple:#7c3aed;
+      --shadow:0 18px 45px rgba(15, 23, 42, .08);
+      --shadow-sm:0 10px 30px rgba(15, 23, 42, .06);
+      --radius:22px;
+      --font:"Inter","SF Pro Display","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font);background:radial-gradient(circle at top left,#e0f2fe 0,#f4f8fb 32%,#f8fafc 100%);color:var(--ink);line-height:1.6;min-height:100vh}
+    a{text-decoration:none;color:inherit}
+    .shell{max-width:1440px;margin:0 auto;padding:24px 28px 60px}
+    .topbar{height:74px;display:flex;align-items:center;justify-content:space-between;gap:20px;background:rgba(255,255,255,.82);backdrop-filter:blur(18px);border:1px solid rgba(219,231,240,.9);box-shadow:var(--shadow-sm);border-radius:26px;padding:0 22px;position:sticky;top:18px;z-index:50}
+    .brand{display:flex;align-items:center;gap:14px;min-width:260px}
+    .logo{height:44px;width:44px;border-radius:12px;object-fit:contain;background:#fff;border:1px solid var(--line);padding:4px;display:block}
+    .logo-fallback{height:44px;width:44px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;color:var(--primary);font-weight:950;font-size:16px;letter-spacing:.5px}
+    .brand-title{font-weight:800;font-size:18px;letter-spacing:.4px;color:#0b3954}
+    .brand-sub{font-size:12px;color:var(--muted);margin-top:-2px}
+    .nav-pills{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+    .nav-pills a{padding:8px 13px;border-radius:999px;font-size:13px;color:#475569;border:1px solid transparent;transition:.2s;background:rgba(248,250,252,.55)}
+    .nav-pills a:hover{border-color:#b6d8ea;color:var(--primary);background:#fff}
+    .status-pill{display:flex;align-items:center;gap:8px;color:#0f766e;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:999px;padding:8px 13px;font-size:13px;font-weight:700;white-space:nowrap}
+    .dot{width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 0 6px rgba(16,185,129,.14)}
+
+    .hero{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;margin-top:26px;align-items:stretch}
+    .hero-card{background:linear-gradient(135deg,#063f63 0%,#075985 48%,#0891b2 100%);border-radius:34px;padding:40px;color:#fff;position:relative;overflow:hidden;box-shadow:0 22px 60px rgba(7,89,133,.23)}
+    .hero-card:before{content:"";position:absolute;inset:-100px -120px auto auto;width:360px;height:360px;border-radius:50%;background:rgba(255,255,255,.12)}
+    .hero-card:after{content:"";position:absolute;bottom:-120px;right:120px;width:280px;height:280px;border-radius:50%;border:42px solid rgba(255,255,255,.08)}
+    .eyebrow{display:inline-flex;gap:8px;align-items:center;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;position:relative;z-index:1}
+    h1{font-size:42px;line-height:1.18;margin:22px 0 16px;position:relative;z-index:1;letter-spacing:-.8px}
+    .hero-card p{font-size:17px;color:rgba(255,255,255,.82);max-width:820px;position:relative;z-index:1}
+    .hero-actions{display:flex;gap:12px;margin-top:26px;position:relative;z-index:1;flex-wrap:wrap}
+    .btn{border:none;border-radius:16px;padding:12px 18px;font-weight:800;cursor:pointer;font-family:inherit;font-size:14px;transition:.22s;display:inline-flex;align-items:center;gap:8px}
+    .btn-light{background:#fff;color:var(--primary);box-shadow:0 10px 28px rgba(0,0,0,.12)}
+    .btn-light:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(0,0,0,.16)}
+    .btn-ghost{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.22)}
+    .btn-ghost:hover{background:rgba(255,255,255,.18)}
+    .metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;height:100%}
+    .metric{background:rgba(255,255,255,.82);backdrop-filter:blur(18px);border:1px solid rgba(219,231,240,.95);border-radius:26px;padding:23px;box-shadow:var(--shadow-sm)}
+    .metric b{display:block;font-size:28px;color:#0b3954;line-height:1.1;margin-bottom:7px}
+    .metric span{font-size:13px;color:var(--muted)}
+
+    .grid{display:grid;grid-template-columns:310px 1fr 390px;gap:22px;margin-top:24px;align-items:start}
+    .panel{background:rgba(255,255,255,.9);border:1px solid rgba(219,231,240,.95);box-shadow:var(--shadow-sm);border-radius:var(--radius);padding:24px}
+    .panel h2{font-size:20px;letter-spacing:-.3px;margin-bottom:14px;color:#0b3954;display:flex;align-items:center;gap:10px}
+    .panel h3{font-size:15px;color:#0f172a;margin:18px 0 10px}
+    .panel p,.small{font-size:13px;color:var(--muted)}
+    .side-list{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+    .side-item{display:flex;gap:11px;padding:13px;border-radius:16px;background:#f8fafc;border:1px solid #e2edf5;align-items:flex-start;transition:.2s}
+    .side-item:hover{border-color:#b9dced;background:#fff;transform:translateY(-1px)}
+    .mini-icon{width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,#e0f2fe,#ccfbf1);display:grid;place-items:center;flex:0 0 auto;color:var(--primary);font-weight:900}
+    .side-item b{font-size:14px;color:#17324a;display:block;margin-bottom:2px}
+    .tagrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .tag{font-size:12px;font-weight:700;color:#48627c;background:#f1f5f9;border:1px solid #dae6ef;border-radius:999px;padding:6px 10px}
+    .tag.hot{color:#b42318;background:#fff1f0;border-color:#ffd5d1}
+    .tag.blue{color:#075985;background:#e0f2fe;border-color:#bae6fd}
+    .tag.green{color:#047857;background:#ecfdf5;border-color:#bbf7d0}
+
+    .form-section{border:1px solid #e2edf5;border-radius:20px;padding:20px;margin-bottom:18px;background:linear-gradient(180deg,#fff,#f8fbfd)}
+    .section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:12px}
+    .section-title strong{font-size:17px;color:#0b3954;display:flex;align-items:center;gap:9px}
+    .step{width:28px;height:28px;border-radius:10px;background:var(--primary);color:#fff;display:inline-grid;place-items:center;font-size:13px}
+    .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+    .form-grid.three{grid-template-columns:repeat(3,1fr)}
+    .field label{display:block;font-size:13px;font-weight:750;color:#334155;margin-bottom:7px}
+    input,select,textarea{width:100%;border:1px solid #d9e6ef;background:#fff;border-radius:14px;padding:12px 13px;font-family:inherit;font-size:14px;color:#102033;outline:none;transition:.2s}
+    textarea{min-height:88px;resize:vertical}
+    input:focus,select:focus,textarea:focus{border-color:#67c3df;box-shadow:0 0 0 4px rgba(8,145,178,.11)}
+    .upload-zone{border:1.5px dashed #a8d8eb;border-radius:18px;background:#f0f9ff;padding:22px;text-align:center;color:#4b6580;transition:.2s;min-height:124px;display:grid;place-items:center}
+    .upload-zone:hover{background:#e0f2fe;border-color:#0891b2}
+    .choice-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-top:10px}
+    .choice{position:relative;border:1px solid #dae6ef;background:#fff;border-radius:18px;padding:15px;cursor:pointer;transition:.2s;min-height:110px}
+    .choice input{position:absolute;opacity:0;pointer-events:none}
+    .choice b{display:block;color:#0f2e44;font-size:15px;margin-bottom:5px}
+    .choice span{font-size:12px;color:#64748b;display:block;line-height:1.45}
+    .choice em{font-style:normal;display:inline-block;margin-top:10px;font-size:11px;border-radius:999px;background:#f1f5f9;padding:3px 8px;color:#64748b}
+    .choice:has(input:checked){border-color:#14b8a6;background:linear-gradient(180deg,#ecfeff,#fff);box-shadow:0 10px 24px rgba(20,184,166,.12)}
+    .choice:has(input:checked)::after{content:"✓";position:absolute;right:12px;top:12px;width:24px;height:24px;border-radius:9px;background:#14b8a6;color:#fff;display:grid;place-items:center;font-weight:900}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .feature{border:1px solid #dae6ef;background:#fff;border-radius:18px;padding:16px;cursor:pointer;transition:.2s;position:relative}
+    .feature input{position:absolute;opacity:0;pointer-events:none}
+    .feature .ico{width:36px;height:36px;border-radius:14px;background:#eef8ff;display:grid;place-items:center;margin-bottom:10px;color:#075985;font-weight:900}
+    .feature b{font-size:14px;color:#11263a;display:block;margin-bottom:4px}
+    .feature span{font-size:12px;color:#64748b;display:block;line-height:1.45}
+    .feature:has(input:checked){background:#f0fdfa;border-color:#2dd4bf;box-shadow:0 10px 24px rgba(45,212,191,.12)}
+    .slider-row{display:grid;grid-template-columns:1fr 86px;gap:10px;align-items:center}
+    input[type="range"]{padding:0;accent-color:#0e7490}
+    .submitbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:18px;background:#082f49;border-radius:22px;padding:16px 18px;color:#fff}
+    .submitbar p{font-size:13px;color:rgba(255,255,255,.72)}
+    .btn-run{background:linear-gradient(135deg,#10b981,#06b6d4);color:#fff;border:none;box-shadow:0 10px 30px rgba(6,182,212,.25);min-width:150px;justify-content:center}
+    .btn-run:hover{transform:translateY(-2px)}
+
+    .result-card{position:sticky;top:112px}
+    .run-state{background:linear-gradient(135deg,#ecfeff,#fff);border:1px solid #c6f6ec;border-radius:22px;padding:18px;margin-bottom:16px}
+    .state-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
+    .state-head b{color:#0f766e;font-size:15px}
+    .progress{height:10px;border-radius:999px;background:#dbeafe;overflow:hidden}
+    .progress > span{display:block;height:100%;width:72%;background:linear-gradient(90deg,#14b8a6,#06b6d4);border-radius:999px;animation:pulsebar 2.2s infinite ease-in-out}
+    @keyframes pulsebar{0%,100%{filter:saturate(1);width:72%}50%{filter:saturate(1.4);width:83%}}
+    .timeline{display:flex;flex-direction:column;gap:9px;margin-top:15px}
+    .timeitem{display:flex;gap:10px;font-size:13px;color:#516579;align-items:flex-start}
+    .check{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;background:#dcfce7;color:#16a34a;font-size:12px;font-weight:900}
+    .pending{background:#e0f2fe;color:#0284c7}
+    .output-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .tab{font-size:12px;font-weight:800;border:1px solid #dae6ef;background:#fff;border-radius:999px;padding:7px 10px;color:#526880;cursor:pointer}
+    .tab.active{background:#075985;color:#fff;border-color:#075985}
+    .rank-table{width:100%;border-collapse:separate;border-spacing:0 8px;font-size:13px}
+    .rank-table th{text-align:left;color:#64748b;font-size:12px;font-weight:800;padding:0 8px}
+    .rank-table td{background:#f8fafc;border-top:1px solid #e2edf5;border-bottom:1px solid #e2edf5;padding:10px 8px;color:#213044}
+    .rank-table td:first-child{border-left:1px solid #e2edf5;border-radius:12px 0 0 12px;font-weight:900;color:#075985}
+    .rank-table td:last-child{border-right:1px solid #e2edf5;border-radius:0 12px 12px 0}
+    .scorebar{height:8px;background:#dbeafe;border-radius:999px;overflow:hidden;width:86px}
+    .scorebar span{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#06b6d4);border-radius:999px}
+    .mock-chart{height:220px;background:linear-gradient(180deg,#fff,#f8fafc);border:1px solid #e2edf5;border-radius:22px;position:relative;overflow:hidden;margin-top:12px}
+    .blob{position:absolute;border-radius:50%;opacity:.78;filter:blur(.2px)}
+    .b1{width:92px;height:56px;background:#bae6fd;left:38px;top:40px}.b2{width:74px;height:96px;background:#a7f3d0;right:65px;top:34px}.b3{width:110px;height:66px;background:#ddd6fe;left:112px;bottom:44px}.b4{width:80px;height:52px;background:#fed7aa;right:102px;bottom:35px}.b5{width:48px;height:48px;background:#fecaca;left:45%;top:42%}
+    .axis{position:absolute;left:22px;bottom:20px;color:#94a3b8;font-size:11px}
+    .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:#64748b}
+    .legend span:before{content:"";display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;background:#bae6fd}.legend span:nth-child(2):before{background:#a7f3d0}.legend span:nth-child(3):before{background:#ddd6fe}.legend span:nth-child(4):before{background:#fed7aa}
+    .download-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+    .download{border:1px solid #dae6ef;background:#fff;border-radius:16px;padding:12px;color:#334155;font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px;transition:.2s}
+    .download:hover{border-color:#38bdf8;background:#f0f9ff;color:#075985}
+
+    .bottom{margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:22px}
+    .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
+    .pipe{background:#f8fafc;border:1px solid #e2edf5;border-radius:16px;padding:14px;text-align:center;position:relative}
+    .pipe:not(:last-child):after{content:"→";position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-weight:900}
+    .pipe b{display:block;color:#075985;font-size:13px;margin-bottom:5px}.pipe span{font-size:11px;color:#64748b}
+
+    .pipeline.vertical{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .pipeline.vertical .pipe{text-align:left;display:flex;align-items:center;gap:12px;padding:12px 13px}
+    .pipeline.vertical .pipe:not(:last-child):after{content:"↓";right:50%;left:auto;top:auto;bottom:-15px;transform:translateX(50%);color:#94a3b8;font-weight:900}
+    .pipeline.vertical .pipe b{min-width:72px;margin-bottom:0}
+    .pipeline.vertical .pipe span{font-size:12px}
+    .footer{margin-top:28px;color:#789;display:flex;justify-content:space-between;gap:14px;font-size:12px;flex-wrap:wrap}
+
+    @media(max-width:1180px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.result-card{position:static}.choice-grid{grid-template-columns:repeat(2,1fr)}.feature-grid{grid-template-columns:repeat(2,1fr)}.bottom{grid-template-columns:1fr}.pipeline{grid-template-columns:1fr}.pipe:after{display:none}}
+    @media(max-width:720px){.shell{padding:14px}.topbar{height:auto;align-items:flex-start;flex-direction:column;padding:16px;top:8px}.nav-pills{justify-content:flex-start}.hero-card{padding:26px;border-radius:24px}h1{font-size:30px}.metric-grid{grid-template-columns:1fr}.form-grid,.form-grid.three,.choice-grid,.feature-grid{grid-template-columns:1fr}.submitbar{flex-direction:column;align-items:stretch}.btn-run{width:100%}.download-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="logo.png" alt="SUNNOVO Logo" class="logo" onerror="this.outerHTML='<div class=\'logo-fallback\'>SN</div>'">
+        <div>
+          <div class="brand-title">SUNNOVO AI研发平台</div>
+          <div class="brand-sub">单细胞靶点发现 · Geneformer 本地入口演示</div>
+        </div>
+      </div>
+      <nav class="nav-pills">
+        <a href="#overview">模型简介</a>
+        <a href="#run">任务配置</a>
+        <a href="#output">结果展示</a>
+        <a href="#pipeline">平台接入</a>
+      </nav>
+      <div class="status-pill"><span class="dot"></span> 本地服务可接入</div>
+    </header>
+
+    <section class="hero" id="overview">
+      <div class="hero-card">
+        <div class="eyebrow">🧬 Geneformer · Single-cell Foundation Model</div>
+        <h1>单细胞靶点发现模型</h1>
+        <p>
+          基于 Geneformer 的单细胞转录组基础模型入口，用于从疾病/正常单细胞数据中识别细胞状态变化、关键调控基因、虚拟扰动响应和候选治疗靶点。
+          该页面用于展示未来本地部署后的交互流程：选择数据、选择模型、配置任务、提交计算、查看靶点排序与自动报告。
+        </p>
+        <div class="hero-actions">
+          <button class="btn btn-light" onclick="document.querySelector('#run').scrollIntoView({behavior:'smooth'})">开始配置任务</button>
+          <a class="btn btn-ghost" href="https://huggingface.co/ctheodoris/Geneformer" target="_blank">Hugging Face 模型页</a>
+        </div>
+      </div>
+      <div class="metric-grid">
+        <div class="metric"><b>104M / 316M</b><span>Geneformer V2 可选参数规模</span></div>
+        <div class="metric"><b>4096</b><span>V2 模型支持的基因上下文长度</span></div>
+        <div class="metric"><b>Zero-shot</b><span>可直接做虚拟扰动等分析</span></div>
+        <div class="metric"><b>Fine-tune</b><span>可面向细胞状态/基因任务微调</span></div>
+      </div>
+    </section>
+
+    <main class="grid">
+      <aside class="panel">
+        <h2>模型能力概览</h2>
+        <p>
+          Geneformer 是在大规模人类单细胞转录组语料上预训练的 Transformer 模型，目标是在网络生物学中支持上下文相关预测，尤其适合样本较少的疾病场景。
+        </p>
+        <div class="side-list">
+          <div class="side-item"><div class="mini-icon">01</div><div><b>细胞状态表征</b><p>提取 cell / gene / CLS embedding，生成 UMAP、热图和细胞状态向量。</p></div></div>
+          <div class="side-item"><div class="mini-icon">02</div><div><b>分类与微调</b><p>面向细胞类型、疾病状态、基因任务进行 fine-tuning 与预测。</p></div></div>
+          <div class="side-item"><div class="mini-icon">03</div><div><b>虚拟扰动</b><p>支持 in silico deletion / overexpression，评估基因扰动对细胞状态的影响。</p></div></div>
+          <div class="side-item"><div class="mini-icon">04</div><div><b>靶点排序</b><p>结合扰动方向、疾病状态回归、表达差异和通路证据，输出候选靶点优先级。</p></div></div>
+        </div>
+        <div class="tagrow">
+          <span class="tag hot">IPF</span><span class="tag blue">肿瘤</span><span class="tag green">炎症</span><span class="tag">纤维化</span><span class="tag">罕见病</span>
+        </div>
+
+        <div id="pipeline" style="margin-top:20px;">
+          <h2 style="font-size:18px;margin-bottom:8px;">平台接入流程</h2>
+          <p class="small">正式上线后，网页负责参数输入与结果展示；模型运行由后端服务、GPU队列和本地 Geneformer 环境完成。</p>
+          <div class="pipeline vertical">
+            <div class="pipe"><b>网页提交</b><span>数据和参数</span></div>
+            <div class="pipe"><b>API接收</b><span>FastAPI服务</span></div>
+            <div class="pipe"><b>任务队列</b><span>Slurm调度</span></div>
+            <div class="pipe"><b>模型计算</b><span>Geneformer环境</span></div>
+            <div class="pipe"><b>结果归档</b><span>报告与图表</span></div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="panel" id="run">
+        <h2>任务配置中心</h2>
+        <p class="small">演示版暂不真正调用模型；正式接入时，本页表单将提交到本地 FastAPI 服务，再由后端调度 Geneformer 环境或 GPU 队列。</p>
+
+        <div class="form-section">
+          <div class="section-title"><strong><span class="step">1</span> 数据输入</strong><span class="tag blue">支持 GEO / h5ad / loom</span></div>
+          <div class="form-grid">
+            <div class="field">
+              <label>项目名称</label>
+              <input id="projectName" value="IPF fibroblast target discovery" />
+            </div>
+            <div class="field">
+              <label>疾病方向</label>
+              <select id="diseaseType">
+                <option>IPF / 肺纤维化</option>
+                <option>肿瘤免疫微环境</option>
+                <option>炎症性疾病</option>
+                <option>肝纤维化</option>
+                <option>自定义疾病</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top:14px">
+            <div class="field">
+              <label>公共数据来源</label>
+              <select>
+                <option>GEO 数据集编号</option>
+                <option>CELLxGENE Census</option>
+                <option>Human Cell Atlas</option>
+                <option>公司内部单细胞数据</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>GEO / 数据集 ID</label>
+              <input placeholder="例如：GSE135893 / GSE136831 / 自定义编号" />
+            </div>
+          </div>
+          <div class="form-grid" style="margin-top:14px">
+            <div class="upload-zone">
+              <div>
+                <b>上传表达矩阵或 AnnData 文件</b><br>
+                <span>拖拽 .h5ad / .loom / .csv / metadata.tsv 到此处</span>
+              </div>
+            </div>
+            <div class="field">
+              <label>关键分组字段</label>
+              <textarea placeholder="例如：disease=IPF/Control；cell_type=Fibroblast/Myofibroblast；donor=patient_id；batch=sample_id">disease: IPF vs Control
+cell_type: Fibroblast / Myofibroblast
+donor: patient_id</textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-title"><strong><span class="step">2</span> 选择模型版本</strong><span class="tag green">本地部署后自动检测</span></div>
+          <div class="choice-grid">
+            <label class="choice"><input type="radio" name="model" checked><b>Geneformer V2-104M</b><span>速度更快，适合日常分析、初筛和多任务尝试。</span><em>推荐日常</em></label>
+            <label class="choice"><input type="radio" name="model"><b>Geneformer V2-316M</b><span>默认大模型版本，适合正式分析和高质量报告。</span><em>推荐汇报</em></label>
+            <label class="choice"><input type="radio" name="model"><b>V2-104M CL Cancer</b><span>癌症单细胞数据持续学习版本，适合肿瘤方向。</span><em>肿瘤优先</em></label>
+            <label class="choice"><input type="radio" name="model"><b>V1-10M Legacy</b><span>早期轻量版本，适合快速测试和流程验证。</span><em>快速测试</em></label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-title"><strong><span class="step">3</span> 选择分析功能</strong><span class="tag">可多选</span></div>
+          <div class="feature-grid">
+            <label class="feature"><input type="checkbox" checked><div class="ico">E</div><b>Embedding 提取</b><span>提取 cell / gene / CLS 向量，生成 UMAP 和细胞状态图谱。</span></label>
+            <label class="feature"><input type="checkbox" checked><div class="ico">C</div><b>细胞状态分类</b><span>预测细胞类型、疾病状态或微调自定义分类器。</span></label>
+            <label class="feature"><input type="checkbox"><div class="ico">G</div><b>基因分类任务</b><span>围绕基因功能、调控范围或剂量敏感性进行任务建模。</span></label>
+            <label class="feature"><input type="checkbox" checked><div class="ico">KO</div><b>虚拟敲除</b><span>in silico delete，评估删除目标基因后的细胞状态偏移。</span></label>
+            <label class="feature"><input type="checkbox"><div class="ico">OE</div><b>虚拟过表达</b><span>in silico overexpress，模拟目标基因表达增强后的影响。</span></label>
+            <label class="feature"><input type="checkbox" checked><div class="ico">T</div><b>靶点优先级排序</b><span>整合扰动、差异表达、通路和细胞亚群证据生成候选靶点榜单。</span></label>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-title"><strong><span class="step">4</span> 参数与输出</strong><span class="tag blue">演示参数</span></div>
+          <div class="form-grid three">
+            <div class="field"><label>目标细胞群</label><select><option>Fibroblast / Myofibroblast</option><option>Epithelial cell</option><option>Macrophage</option><option>T cell</option><option>全部细胞</option></select></div>
+            <div class="field"><label>扰动基因范围</label><select><option>差异基因 Top 500</option><option>转录因子列表</option><option>成药靶点列表</option><option>自定义基因列表</option><option>全基因扫描</option></select></div>
+            <div class="field"><label>运行队列</label><select><option>GPU-quick / 演示队列</option><option>GPU-normal / 标准队列</option><option>GPU-large / 大模型队列</option></select></div>
+          </div>
+          <div class="form-grid" style="margin-top:14px">
+            <div class="field">
+              <label>最大细胞数：<span id="cellCount">50,000</span></label>
+              <div class="slider-row"><input type="range" min="5000" max="300000" value="50000" step="5000" oninput="cellCount.textContent=Number(this.value).toLocaleString()"><input value="50k" readonly></div>
+            </div>
+            <div class="field"><label>报告输出格式</label><select><option>HTML + Excel + PNG</option><option>PDF + Excel</option><option>JSON API</option><option>全部输出</option></select></div>
+          </div>
+        </div>
+
+        <div class="submitbar">
+          <div><b>准备提交到本地 Geneformer 服务</b><p>后续可对接：/api/models/geneformer/run，返回 job_id 后页面自动轮询任务状态。</p></div>
+          <button class="btn btn-run" onclick="simulateRun()">提交分析任务</button>
+        </div>
+      </section>
+
+      <aside class="panel result-card" id="output">
+        <h2>运行与结果展示</h2>
+        <div class="run-state">
+          <div class="state-head"><b id="stateTitle">演示任务运行中</b><span class="tag green" id="jobId">JOB-GF-20260603-001</span></div>
+          <div class="progress"><span id="progressBar"></span></div>
+          <div class="timeline" id="timeline">
+            <div class="timeitem"><span class="check">✓</span><span>数据读取与质控完成：h5ad / metadata 已解析</span></div>
+            <div class="timeitem"><span class="check">✓</span><span>Geneformer tokenizer 完成：基因 rank-value 编码已生成</span></div>
+            <div class="timeitem"><span class="check pending">…</span><span>正在执行 embedding 提取、虚拟敲除和靶点排序</span></div>
+          </div>
+        </div>
+
+        <div class="output-tabs">
+          <button class="tab active">靶点排序</button><button class="tab">UMAP</button><button class="tab">扰动分析</button><button class="tab">报告</button>
+        </div>
+        <table class="rank-table">
+          <thead><tr><th>Rank</th><th>Gene</th><th>Evidence</th><th>Score</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>COL1A1</td><td>Fibrosis shift</td><td><div class="scorebar"><span style="width:92%"></span></div></td></tr>
+            <tr><td>2</td><td>POSTN</td><td>Myofibroblast</td><td><div class="scorebar"><span style="width:87%"></span></div></td></tr>
+            <tr><td>3</td><td>CTGF</td><td>Pathway</td><td><div class="scorebar"><span style="width:82%"></span></div></td></tr>
+            <tr><td>4</td><td>ITGA11</td><td>Cell state</td><td><div class="scorebar"><span style="width:75%"></span></div></td></tr>
+          </tbody>
+        </table>
+
+        <div class="mock-chart" aria-label="UMAP示意图">
+          <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div><div class="blob b5"></div><div class="axis">UMAP projection · demo</div>
+        </div>
+        <div class="legend"><span>Control</span><span>IPF</span><span>Fibroblast</span><span>Myofibroblast</span></div>
+
+        <div class="download-grid">
+          <a href="javascript:void(0)" class="download">📊 靶点排序表</a>
+          <a href="javascript:void(0)" class="download">🧭 UMAP图片</a>
+          <a href="javascript:void(0)" class="download">🧪 扰动结果</a>
+          <a href="javascript:void(0)" class="download">📄 自动报告</a>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span>© SUNNOVO AI研发平台 · Geneformer 单细胞靶点发现模型入口</span>
+      <span>页面为展示版，正式环境需接入本地 API、鉴权、任务队列和结果数据库。</span>
+    </footer>
+  </div>
+
+  <script>
+    function simulateRun(){
+      const pn = document.getElementById('projectName').value || 'Geneformer analysis';
+      document.getElementById('stateTitle').textContent = '任务已提交：' + pn.slice(0, 18);
+      document.getElementById('jobId').textContent = 'JOB-GF-' + new Date().toISOString().slice(0,10).replaceAll('-','') + '-' + Math.floor(Math.random()*900+100);
+      const tl = document.getElementById('timeline');
+      tl.innerHTML = `
+        <div class="timeitem"><span class="check">✓</span><span>任务已进入 GPU-quick 队列，等待本地 Geneformer 服务响应</span></div>
+        <div class="timeitem"><span class="check">✓</span><span>输入参数校验完成：疾病方向、细胞群、模型版本已记录</span></div>
+        <div class="timeitem"><span class="check pending">…</span><span>演示模式：正在生成模拟靶点排序、UMAP和自动报告</span></div>`;
+      document.querySelector('#output').scrollIntoView({behavior:'smooth'});
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUNNOVO 公司集群登录</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="shortcut icon" type="image/png" href="logo.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+  <style>
+    :root{
+      --bg:#f4f8fc;--surface:#fff;--ink:#172033;--muted:#617089;--light:#91a0b4;--line:#e2eaf4;
+      --brand:#075d80;--brand2:#1181aa;--teal:#10b7a5;--orange:#ff8a00;--soft:#eef8ff;
+      --shadow:0 22px 70px rgba(20,45,76,.13);--shadow2:0 10px 26px rgba(20,45,76,.08);
+      --font:"Inter","SF Pro Display","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{min-height:100vh;font-family:var(--font);color:var(--ink);background:
+      radial-gradient(circle at 10% 10%,rgba(16,183,165,.18),transparent 32%),
+      radial-gradient(circle at 90% 0%,rgba(255,138,0,.12),transparent 34%),
+      linear-gradient(135deg,#f6f9fd 0%,#eef5fb 100%);overflow-x:hidden;}
+    a{text-decoration:none;color:inherit;}
+    .page{min-height:100vh;display:grid;grid-template-columns:1.05fr .95fr;align-items:stretch;}
+    .intro{position:relative;padding:46px 56px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;}
+    .intro:before{content:"";position:absolute;width:560px;height:560px;border-radius:50%;left:-190px;bottom:-210px;background:rgba(7,93,128,.08);}
+    .intro:after{content:"";position:absolute;width:420px;height:420px;border-radius:50%;right:-180px;top:90px;border:1px solid rgba(7,93,128,.12);}
+    .brand{position:relative;z-index:1;display:flex;align-items:center;gap:14px;}
+    .logo{width:54px;height:54px;border-radius:17px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow2);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    .logo img{width:100%;height:100%;object-fit:contain;padding:6px;}
+    .brand h1{font-size:18px;line-height:1.1;letter-spacing:.2px;}
+    .brand span{font-size:12px;color:var(--light);font-weight:800;letter-spacing:.3px;}
+    .hero{position:relative;z-index:1;max-width:760px;margin:60px 0;}
+    .pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;color:var(--brand);font-size:13px;font-weight:900;box-shadow:var(--shadow2);margin-bottom:20px;}
+    .dot{width:8px;height:8px;border-radius:99px;background:#15c47e;box-shadow:0 0 0 5px rgba(21,196,126,.13);}
+    .hero h2{font-size:42px;line-height:1.15;letter-spacing:-.8px;margin-bottom:16px;}
+    .hero p{font-size:16px;color:var(--muted);max-width:680px;line-height:1.8;}
+    .features{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:760px;}
+    .feature{background:rgba(255,255,255,.82);border:1px solid rgba(226,234,244,.92);border-radius:20px;padding:18px;box-shadow:var(--shadow2);backdrop-filter:blur(16px);}
+    .feature strong{display:block;font-size:15px;margin-bottom:5px;color:var(--brand);}
+    .feature span{display:block;color:var(--muted);font-size:13px;line-height:1.62;}
+    .login-wrap{padding:46px 56px;display:flex;align-items:center;justify-content:center;}
+    .login-card{width:min(520px,100%);background:rgba(255,255,255,.94);border:1px solid rgba(226,234,244,.95);border-radius:30px;box-shadow:var(--shadow);overflow:hidden;}
+    .login-top{background:linear-gradient(135deg,#064764,#087299 58%,#0d9a8f);color:#fff;padding:28px 30px;position:relative;overflow:hidden;}
+    .login-top:after{content:"";position:absolute;right:-70px;top:-90px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.13);}
+    .login-top small{display:block;font-weight:950;letter-spacing:1.7px;text-transform:uppercase;color:rgba(255,255,255,.72);margin-bottom:7px;}
+    .login-top h3{font-size:25px;line-height:1.25;}
+    .login-top p{color:rgba(255,255,255,.78);font-size:13px;margin-top:8px;line-height:1.65;}
+    form{padding:28px 30px 30px;}
+    .field{margin-bottom:16px;}
+    .field label{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:900;color:var(--muted);margin-bottom:7px;}
+    .field label a{font-size:12px;color:var(--brand);font-weight:900;}
+    .input{height:48px;width:100%;border:1px solid var(--line);border-radius:15px;padding:0 14px;font:inherit;font-size:14px;color:var(--ink);outline:none;background:#fff;transition:.2s ease;}
+    .input:focus{border-color:rgba(16,183,165,.78);box-shadow:0 0 0 4px rgba(16,183,165,.12);}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 0 18px;}
+    .check{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;font-weight:750;}
+    .check input{accent-color:var(--brand);}
+    .btn{width:100%;height:48px;border:0;border-radius:999px;background:linear-gradient(135deg,var(--brand),var(--teal));color:#fff;font:inherit;font-weight:950;cursor:pointer;box-shadow:0 14px 28px rgba(7,93,128,.22);transition:.2s ease;}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 18px 34px rgba(7,93,128,.28);}
+    .help{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;}
+    .help a,.help button{border:1px solid var(--line);background:#f8fbff;color:var(--brand);border-radius:14px;padding:10px;font:inherit;font-size:12px;font-weight:900;text-align:center;cursor:pointer;}
+    .notice{margin-top:18px;background:#fff7ea;border:1px solid #ffe0ad;color:#8a4b00;border-radius:16px;padding:12px 14px;font-size:12px;line-height:1.65;}
+    .status{border-top:1px solid var(--line);padding:14px 30px;background:#fbfdff;display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px;}
+    .back{position:fixed;left:24px;top:24px;z-index:3;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow2);border-radius:999px;padding:8px 13px;color:var(--brand);font-size:13px;font-weight:900;display:none;}
+    @media(max-width:980px){.page{grid-template-columns:1fr}.intro{padding:34px 24px}.login-wrap{padding:14px 24px 38px}.hero{margin:38px 0}.hero h2{font-size:32px}.features{grid-template-columns:1fr}.back{display:inline-flex}}
+    @media(max-width:560px){form,.login-top{padding-left:22px;padding-right:22px}.help{grid-template-columns:1fr}.status{align-items:flex-start;flex-direction:column;gap:4px}.login-card{border-radius:24px}}
+  </style>
+</head>
+<body>
+  <a class="back" href="AI_platform_sunnovo_v15.html">← 返回AI平台</a>
+  <div class="page">
+    <section class="intro">
+      <div class="brand">
+        <div class="logo"><img src="logo.png" alt="SUNNOVO Logo" /></div>
+        <div><h1>阳光诺和公司集群</h1><span>SUNNOVO HPC & AI Cluster</span></div>
+      </div>
+      <div class="hero">
+        <div class="pill"><span class="dot"></span>内部演示门户 · Slurm / GPU / AI服务</div>
+        <h2>统一登录研发计算平台</h2>
+        <p>面向 CADD/AIDD、MD 模拟、生信分析、结构预测和本地大模型服务，提供账号登录、任务提交、队列监控、GPU 资源查看、日志追踪和结果下载能力。</p>
+      </div>
+      <div class="features">
+        <div class="feature"><strong>GPU 任务提交</strong><span>支持 Docking、MD、ADMET、结构预测、单细胞模型和批量推理任务。</span></div>
+        <div class="feature"><strong>队列与资源监控</strong><span>查看 Slurm 队列、GPU 占用、任务日志、运行状态和历史结果。</span></div>
+        <div class="feature"><strong>容器化软件环境</strong><span>统一管理 Docker / Apptainer 镜像，减少环境配置和依赖冲突。</span></div>
+        <div class="feature"><strong>模型服务入口</strong><span>集中管理 Dify、OpenWebUI、vLLM、Ollama 和公司内部模型 API。</span></div>
+      </div>
+    </section>
+
+    <section class="login-wrap">
+      <div class="login-card">
+        <div class="login-top">
+          <small>Cluster Login</small>
+          <h3>登录公司集群</h3>
+          <p>请输入公司账号密码。正式上线时可接入 LDAP/SSO、VPN 白名单和项目级权限管理。</p>
+        </div>
+        <form id="clusterLoginForm" action="/cluster/login" method="post">
+          <div class="field">
+            <label>公司账号</label>
+            <input class="input" name="username" type="text" placeholder="请输入公司账号 / 工号 / 邮箱" autocomplete="username" required />
+          </div>
+          <div class="field">
+            <label>密码 <a href="#" onclick="alert('演示版：请联系平台管理员重置密码。');return false;">忘记密码？</a></label>
+            <input class="input" name="password" type="password" placeholder="请输入密码" autocomplete="current-password" required />
+          </div>
+          <div class="row">
+            <label class="check"><input type="checkbox" name="remember" /> 记住本机登录状态</label>
+            <span style="color:var(--light);font-size:12px;font-weight:800;">内网/VPN访问</span>
+          </div>
+          <button class="btn" type="submit">登录集群 →</button>
+          <div class="help">
+            <a href="AI_platform_sunnovo_v15.html">返回AI平台</a>
+            <button type="button" onclick="alert('演示版：正式上线后可跳转到集群使用手册、账号申请流程和常见问题。')">查看使用手册</button>
+          </div>
+          <div class="notice">安全提示：集群账号仅限公司内部研发人员使用。请勿共享账号、密码、API Key 或项目数据。正式环境建议启用 VPN、二次验证和操作审计。</div>
+        </form>
+        <div class="status"><span><span class="dot" style="display:inline-block;margin-right:7px;vertical-align:middle;"></span>Cluster Portal Ready</span><span>Slurm · GPU · Storage · Model Service</span></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    document.getElementById('clusterLoginForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      alert('演示版：登录请求将提交到 /cluster/login。
+正式上线时可接入公司 LDAP/SSO、VPN 和项目权限系统。');
+    });
+  </script>
+</body>
+</html>

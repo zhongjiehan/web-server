@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUNNOVO · 研发数据库门户</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="shortcut icon" type="image/png" href="logo.png" />
+  <style>
+    :root{
+      --bg:#f5f8fc;
+      --surface:#ffffff;
+      --surface-soft:#f9fbff;
+      --ink:#172033;
+      --muted:#5d6c82;
+      --light:#8b99ad;
+      --line:#e3eaf3;
+      --brand:#075d80;
+      --brand-2:#1178a5;
+      --brand-3:#10b7a5;
+      --brand-4:#ff8a00;
+      --blue-soft:#e9f6ff;
+      --teal-soft:#e7fffb;
+      --orange-soft:#fff4e3;
+      --purple-soft:#f4edff;
+      --green-soft:#effcf5;
+      --red-soft:#fff1f0;
+      --shadow:0 18px 48px rgba(26, 48, 78, .09);
+      --shadow-soft:0 8px 24px rgba(26, 48, 78, .06);
+      --radius:22px;
+      --radius-sm:15px;
+      --nav:258px;
+      --font:"Inter", "SF Pro Display", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:var(--font);
+      background:radial-gradient(circle at 82% 0%, rgba(16,183,165,.15), transparent 32%), radial-gradient(circle at 2% 8%, rgba(17,120,165,.13), transparent 34%), var(--bg);
+      color:var(--ink);line-height:1.62;
+    }
+    a{text-decoration:none;color:inherit}
+    ::selection{background:rgba(16,183,165,.25)}
+    .app{display:flex;min-height:100vh}
+    .side{position:fixed;left:0;top:0;width:var(--nav);height:100vh;background:rgba(255,255,255,.88);border-right:1px solid rgba(227,234,243,.95);backdrop-filter:blur(18px);z-index:20;padding:22px 18px;display:flex;flex-direction:column}
+    .brand-box{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+    .logo-mark{width:48px;height:48px;border-radius:16px;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 10px 24px rgba(7,93,128,.13);color:var(--brand);font-weight:950}
+    .logo-mark img{width:100%;height:100%;object-fit:contain;padding:5px}.logo-fallback{display:none;font-size:15px;letter-spacing:.5px}
+    .brand-title{font-size:16px;font-weight:950;letter-spacing:.2px}.brand-sub{font-size:11px;color:var(--light);margin-top:1px;letter-spacing:.2px}
+    .nav-label{font-size:11px;font-weight:950;color:#9ba8ba;letter-spacing:1.8px;margin:10px 10px 8px;text-transform:uppercase}.nav{display:flex;flex-direction:column;gap:6px}
+    .nav a{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;color:var(--muted);font-size:14px;font-weight:800;transition:.2s ease}
+    .nav a:hover,.nav a.active{background:linear-gradient(135deg,#e9f7ff,#f0fffb);color:var(--brand);transform:translateX(2px)}
+    .nav small{margin-left:auto;background:#edf4fa;color:#6a7c91;border-radius:999px;padding:0 7px;font-size:10px}.nav-ico{width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;color:currentColor;flex:0 0 19px}.nav-ico svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .side-user{margin:14px 4px 0;padding:14px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,#ffffff,#f7fbff);box-shadow:var(--shadow-soft)}.side-user-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}.side-avatar{width:36px;height:36px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--brand),var(--brand-3));color:#fff;font-weight:950;box-shadow:0 8px 18px rgba(7,93,128,.18)}.side-user-title{font-size:13px;font-weight:950;color:var(--ink);line-height:1.25}.side-user-sub{font-size:10px;color:var(--light);font-weight:850;letter-spacing:.8px;text-transform:uppercase}.side-user-row{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid #eef3f8;font-size:12px}.side-user-row span{color:var(--light);font-weight:850}.side-user-row strong{color:var(--brand);font-weight:950;text-align:right}.side-user-row .admin{display:inline-flex;align-items:center;border-radius:999px;background:var(--teal-soft);border:1px solid #bdeee6;color:#008577;padding:2px 7px;font-size:11px}
+    .side-footer{margin-top:auto;border-top:1px solid var(--line);padding-top:16px;color:var(--light);font-size:12px}.status-dot{display:inline-block;width:8px;height:8px;background:#15c47e;border-radius:99px;margin-right:6px;box-shadow:0 0 0 4px rgba(21,196,126,.14)}
+    .main{margin-left:var(--nav);width:calc(100% - var(--nav))}.topbar{position:sticky;top:0;z-index:10;min-height:74px;background:rgba(245,248,252,.8);backdrop-filter:blur(18px);border-bottom:1px solid rgba(227,234,243,.78);display:flex;align-items:center;justify-content:space-between;padding:14px 34px;gap:16px}.breadcrumb{font-size:13px;color:var(--light);font-weight:800}.breadcrumb strong{color:var(--brand)}
+    .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.user-badge{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 12px;box-shadow:var(--shadow-soft);font-size:12px;color:var(--muted);white-space:nowrap}.user-avatar{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--brand),var(--brand-3));color:#fff;font-weight:950}.user-badge strong{color:var(--brand);font-size:13px}.global-search{position:relative;width:min(460px,42vw)}.global-search input{width:100%;height:42px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:0 46px 0 18px;outline:none;font:inherit;font-size:14px;box-shadow:var(--shadow-soft);transition:.2s ease}.global-search input:focus{border-color:rgba(16,183,165,.72);box-shadow:0 0 0 4px rgba(16,183,165,.13), var(--shadow-soft)}.global-search span{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--light)}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:900;border:1px solid transparent;transition:.2s ease;cursor:pointer;white-space:nowrap;font-family:inherit}.btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand-3));color:#fff;box-shadow:0 10px 24px rgba(7,93,128,.18)}.btn.soft{background:#fff;color:var(--brand);border-color:var(--line);box-shadow:var(--shadow-soft)}.btn.ghost{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);color:#fff}.btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.12)}
+    section{scroll-margin-top:94px}.container{max-width:1500px;margin:0 auto;padding:34px 34px 72px}.hero{position:relative;overflow:hidden;border-radius:30px;background:linear-gradient(135deg,#064764 0%,#087299 45%,#0d9a8f 100%);padding:38px;color:#fff;box-shadow:0 24px 64px rgba(7,93,128,.24)}.hero:before{content:"";position:absolute;right:-118px;top:-130px;width:440px;height:440px;border-radius:50%;background:rgba(255,255,255,.12)}.hero:after{content:"";position:absolute;right:68px;bottom:-180px;width:380px;height:380px;border-radius:50%;border:1px solid rgba(255,255,255,.22)}.hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1.08fr .92fr;gap:28px;align-items:center}.eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:850;margin-bottom:14px}.hero h1{font-size:38px;line-height:1.18;letter-spacing:-.8px;margin-bottom:12px}.hero p{max-width:850px;color:rgba(255,255,255,.84);font-size:16px}.hero-actions{margin-top:24px;display:flex;flex-wrap:wrap;gap:12px}.hero-panel{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.hero-card-mini{background:rgba(255,255,255,.13);border-radius:18px;padding:17px;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(12px)}.hero-card-mini strong{display:block;font-size:22px;margin-bottom:4px}.hero-card-mini span{font-size:12px;color:rgba(255,255,255,.8);display:block;line-height:1.55}
+    .section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin:38px 0 18px}.section-head p{color:var(--muted);max-width:860px;margin-top:5px;font-size:14px}.section-kicker{font-size:12px;font-weight:950;letter-spacing:1.7px;color:var(--brand-3);text-transform:uppercase;margin-bottom:4px}.section-head h2{font-size:26px;letter-spacing:-.3px}.tagbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}.chip{display:inline-flex;align-items:center;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px;font-weight:850;padding:5px 10px}.chip.teal{background:var(--teal-soft);color:#008577;border-color:#bdeee6}.chip.orange{background:var(--orange-soft);color:#b45b00;border-color:#ffd99d}.chip.purple{background:var(--purple-soft);color:#7c3fb2;border-color:#dfccff}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}.card{background:rgba(255,255,255,.94);border:1px solid rgba(227,234,243,.95);box-shadow:var(--shadow-soft);border-radius:var(--radius);transition:.22s ease;position:relative;overflow:hidden}.card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#cfe8f5}.pad{padding:22px}.full{grid-column:span 12}.wide{grid-column:span 8}.mid{grid-column:span 6}.third{grid-column:span 4}.quarter{grid-column:span 3}.card h3{font-size:17px;margin-bottom:8px;color:#152238}.card p{font-size:13px;color:var(--muted)}
+    .module-card{grid-column:span 4;padding:22px;min-height:240px}.module-card:before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--brand)}.module-card.project:before{background:var(--brand-3)}.module-card.exp:before{background:#6f7ef6}.module-card.seq:before{background:#26a2ff}.module-card.calc:before{background:var(--brand-4)}.module-card.report:before{background:#7c3aed}.module-card.patent:before{background:#0ea5e9}.module-card.security:before{background:#15c47e}.stage{display:inline-flex;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900;background:var(--blue-soft);color:var(--brand);margin-bottom:12px}.stage.green{background:var(--green-soft);color:#0c7c52}.stage.orange{background:var(--orange-soft);color:#c76700}.stage.purple{background:var(--purple-soft);color:#7c3fb2}.module-card ul{margin:12px 0 0 18px;color:var(--muted);font-size:13px}.module-card li{margin:5px 0}.module-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.tiny-link{display:inline-flex;align-items:center;justify-content:center;min-height:29px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--brand);font-size:12px;font-weight:850;padding:5px 10px;white-space:nowrap;transition:.2s ease}.tiny-link:hover{background:var(--blue-soft);transform:translateY(-1px)}.tiny-link.local{color:#008577;background:var(--teal-soft);border-color:#bdeee6}.tiny-link.warn{color:#b45b00;background:var(--orange-soft);border-color:#ffd99d}.tiny-link.dark{color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand-3));border:0}
+    .stat-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.stat{background:rgba(255,255,255,.92);border:1px solid rgba(227,234,243,.95);box-shadow:var(--shadow-soft);border-radius:20px;padding:18px;position:relative;overflow:hidden}.stat:after{content:"";position:absolute;right:-36px;top:-40px;width:105px;height:105px;border-radius:50%;background:rgba(16,183,165,.11)}.stat b{display:block;font-size:26px;line-height:1.05;color:var(--brand);margin-bottom:7px}.stat span{font-size:12px;color:var(--muted);font-weight:750}.stat em{display:block;font-style:normal;color:#95a2b5;font-size:11px;margin-top:5px}
+    .smart-search{display:grid;grid-template-columns:1fr auto;gap:10px;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:18px;background:#fff}.smart-search input{border:0;outline:0;font:inherit;color:var(--ink);font-size:14px}.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}.quick{background:#f8fbff;border:1px solid var(--line);border-radius:16px;padding:14px;transition:.2s ease;cursor:pointer}.quick:hover{transform:translateY(-2px);background:#fff;box-shadow:var(--shadow-soft)}.quick strong{font-size:14px;color:var(--brand);display:block;margin-bottom:4px}.quick span{font-size:12px;color:var(--muted)}
+    .table-wrap{overflow:auto;border-radius:18px;border:1px solid var(--line);background:#fff;margin-top:14px}.data-table{width:100%;border-collapse:collapse;font-size:13px;min-width:780px}.data-table th{background:#f5f9fd;color:#617084;font-size:12px;text-align:left;padding:12px;border-bottom:1px solid var(--line);white-space:nowrap}.data-table td{padding:13px 12px;border-bottom:1px solid #edf2f7;color:#243249}.data-table tr:last-child td{border-bottom:0}.badge{display:inline-flex;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:900}.badge.green{background:#e9fbf3;color:#0d8a60}.badge.orange{background:#fff4e3;color:#c76700}.badge.blue{background:#e9f6ff;color:#075d80}.badge.purple{background:#f4edff;color:#7c3fb2}.badge.red{background:#fff1f0;color:#d4380d}
+    .asset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.asset{border:1px solid var(--line);border-radius:18px;background:#fff;padding:15px}.asset .asset-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}.asset b{font-size:14px;color:#192942}.asset p{font-size:12px;color:var(--muted);line-height:1.5}.asset-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}.asset-meta span{font-size:11px;background:#f4f7fa;color:#66758a;border:1px solid var(--line);border-radius:999px;padding:3px 8px}.upload-zone{border:1.5px dashed #b5dfee;background:#f0f9ff;border-radius:18px;padding:22px;text-align:center;color:#4f687e;margin-top:14px}.upload-zone b{color:var(--brand)}
+    .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}.flow-step{background:#f8fbff;border:1px solid var(--line);border-radius:16px;padding:14px;text-align:center;position:relative}.flow-step:not(:last-child):after{content:"→";position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-weight:950}.flow-step b{display:block;color:var(--brand);font-size:13px;margin-bottom:5px}.flow-step span{font-size:11px;color:var(--muted)}
+    .notice{background:linear-gradient(135deg,#fff,#f8fbff);border:1px solid var(--line);border-left:5px solid var(--brand-3);border-radius:18px;padding:17px;color:var(--muted);font-size:13px}.notice strong{color:var(--brand)}
+    .footer{text-align:center;color:var(--light);font-size:13px;border-top:1px solid var(--line);padding:28px;background:rgba(255,255,255,.76)}
+    .no-results{display:none;background:#fff;border:1px dashed #ccd6e3;border-radius:var(--radius);padding:22px;margin-top:24px;color:var(--muted);text-align:center}
+    @media(max-width:1180px){.hero-inner{grid-template-columns:1fr}.module-card,.third,.wide,.mid{grid-column:span 12}.quarter{grid-column:span 6}.stat-grid,.asset-grid,.quick-grid{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:1fr}.flow-step:after{display:none}}
+    @media(max-width:840px){:root{--nav:0px}.side{display:none}.main{margin-left:0;width:100%}.topbar{padding:12px 18px;align-items:flex-start;flex-direction:column}.top-actions{width:100%;justify-content:flex-start}.global-search{width:100%}.container{padding:22px 16px 52px}.hero{padding:26px}.hero h1{font-size:30px}.hero-panel,.stat-grid,.asset-grid,.quick-grid{grid-template-columns:1fr}.quarter{grid-column:span 12}.section-head{flex-direction:column;align-items:flex-start}.smart-search{grid-template-columns:1fr}.btn{width:100%}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand-box">
+      <div class="logo-mark"><img src="logo.png" alt="SUNNOVO Logo" onerror="this.style.display='none';this.nextElementSibling.style.display='block';" /><span class="logo-fallback">SN</span></div>
+      <div><div class="brand-title">诺和研发数据库</div><div class="brand-sub">SUNNOVO Research Data Hub</div></div>
+    </div>
+    <div class="nav-label">数据模块</div>
+    <nav class="nav" id="sideNav">
+      <a href="#overview" class="active"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></span>数据总览 <small>Home</small></a>
+      <a href="#modules"><span class="nav-ico"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></svg></span>功能模块 <small>DB</small></a>
+      <a href="#projects"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/><circle cx="7" cy="7" r="1"/><circle cx="7" cy="12" r="1"/><circle cx="7" cy="17" r="1"/></svg></span>项目与记录 <small>Data</small></a>
+      <a href="#patents"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M4 5h12l4 4v10a2 2 0 0 1-2 2H4z"/><path d="M14 5v6h6"/><path d="M8 13h7M8 17h5"/></svg></span>专利库 <small>IP</small></a>
+      <a href="#assets"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M14 3v6h6"/></svg></span>文件与结果 <small>File</small></a>
+      <a href="#security"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4.4 2.8 7.7 7 9 4.2-1.3 7-4.6 7-9V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg></span>权限与归档 <small>Sec</small></a>
+    </nav>
+    <div class="side-user" aria-label="当前登录用户信息">
+      <div class="side-user-head"><span class="side-avatar">韩</span><div><div class="side-user-sub">Current User</div><div class="side-user-title">当前登录用户</div></div></div>
+      <div class="side-user-row"><span>姓名</span><strong>韩中杰</strong></div>
+      <div class="side-user-row"><span>部门</span><strong>创新办公室</strong></div>
+      <div class="side-user-row"><span>权限</span><strong class="admin">系统最高级管理员</strong></div>
+    </div>
+    <div class="side-footer"><span class="status-dot"></span>演示版数据库门户<br/>项目 · 实验 · 文件 · 计算 · 专利 · 报告</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumb">SUNNOVO / <strong>研发数据库门户</strong></div>
+      <div class="top-actions">
+        <div class="global-search"><input id="globalSearch" type="search" placeholder="搜索项目、靶点、序列、结构、实验、专利、报告..." /><span>⌕</span></div>
+        <a class="btn soft" href="AI_platform_sunnovo_v15.html" target="_blank" rel="noopener">返回AI平台</a>
+        <a class="btn primary" href="cluster_login.html" target="_blank" rel="noopener">登录公司集群</a>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="overview" class="hero searchable" data-search="总览 研发数据库 数据中台 项目 实验 序列 结构 计算结果 AI报告 权限 知识库">
+        <div class="hero-inner">
+          <div>
+            <div class="eyebrow">SUNNOVO Research Data Hub</div>
+            <h1>研发数据资产统一入口</h1>
+            <p>面向药物研发项目建设统一数据库门户，将项目资料、实验记录、序列结构、计算结果、专利情报和AI报告集中管理。研发人员可以按项目、靶点、分子、实验批次和计算任务快速检索，形成可追溯、可复用的研发证据链。</p>
+            <div class="hero-actions"><a class="btn primary" href="#modules">查看数据库模块 →</a><a class="btn ghost" href="#projects">查看项目数据</a><a class="btn ghost" href="#assets">查看文件与结果</a></div>
+          </div>
+          <div class="hero-panel">
+            <div class="hero-card-mini"><strong>7类</strong><span>项目、实验、序列结构、计算、专利、报告、权限审计核心模块。</span></div>
+            <div class="hero-card-mini"><strong>1条</strong><span>围绕“靶点—分子—实验—计算—报告—决策”的证据链。</span></div>
+            <div class="hero-card-mini"><strong>AI-ready</strong><span>后续可直接接入RAG检索、智能体问答和自动报告。</span></div>
+            <div class="hero-card-mini"><strong>Traceable</strong><span>记录上传、修改、调用、下载和归档行为。</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="searchable" data-search="统计 项目 文件 计算报告 实验活动">
+        <div class="section-head"><div><div class="section-kicker">Dashboard</div><h2>数据总览</h2><p>用于展示公司研发数据沉淀情况。当前为演示数据，正式上线后可接入项目管理系统、文件存储、计算平台和实验记录库。</p></div><div class="tagbar"><span class="chip teal">统一检索</span><span class="chip">项目权限</span><span class="chip orange">结果归档</span></div></div>
+        <div class="stat-grid">
+          <div class="stat"><b>28</b><span>在研项目</span><em>按适应症/分子类型/负责人管理</em></div>
+          <div class="stat"><b>12,480</b><span>序列与结构文件</span><em>FASTA / PDB / SDF / SMILES / h5ad</em></div>
+          <div class="stat"><b>1,936</b><span>计算任务结果</span><em>Docking / MD / ADMET / Geneformer</em></div>
+          <div class="stat"><b>486</b><span>专利与情报记录</span><em>专利全文 / 权利要求 / 同族 / 序列</em></div>
+          <div class="stat"><b>312</b><span>AI报告归档</span><em>靶点、专利、计算、项目决策报告</em></div>
+        </div>
+        <article class="card pad" style="margin-top:16px;">
+          <h3>智能检索入口</h3>
+          <p>模拟企业数据库的统一搜索框：可按项目名、靶点、基因、疾病、序列ID、结构文件、实验批次、专利号、计算任务编号或报告关键词检索。</p>
+          <div class="smart-search"><input id="smartQuery" placeholder="例如：IPF fibroblast POSTN docking report / FcRn peptide pH / siRNA off-target" /><button class="btn primary" onclick="demoAlert('演示版：后续可接入 Elasticsearch / 向量数据库 / RAG 知识库进行统一检索。')">智能检索</button></div>
+          <div class="quick-grid">
+            <div class="quick" onclick="document.querySelector('#projects').scrollIntoView({behavior:'smooth'})"><strong>项目数据总览</strong><span>查看项目阶段、负责人、风险和Go/No-Go记录。</span></div>
+            <div class="quick" onclick="document.querySelector('#patents').scrollIntoView({behavior:'smooth'})"><strong>专利库查询</strong><span>查看专利全文、权利要求、同族和竞品布局。</span></div>
+            <div class="quick" onclick="document.querySelector('#modules').scrollIntoView({behavior:'smooth'})"><strong>上传数据资产</strong><span>沉淀实验、序列、结构、计算结果和报告。</span></div>
+            <div class="quick" onclick="document.querySelector('#assets').scrollIntoView({behavior:'smooth'})"><strong>计算结果查询</strong><span>查看对接、MD、ADMET、单细胞和结构预测结果。</span></div>
+            <div class="quick" onclick="document.querySelector('#security').scrollIntoView({behavior:'smooth'})"><strong>权限与审计</strong><span>按项目组、角色和数据类型进行访问控制。</span></div>
+          </div>
+        </article>
+      </section>
+
+      <section id="modules">
+        <div class="section-head"><div><div class="section-kicker">Database Modules</div><h2>数据库功能模块</h2><p>模块内容与AI平台“公司数据库入口”的按钮保持一致，覆盖项目、实验、序列结构、计算结果、AI报告归档和专利库，后续可逐个接入真实后端、文件系统、权限系统和RAG检索。</p></div><div class="tagbar"><span class="chip teal">项目级权限</span><span class="chip purple">AI可读</span><span class="chip">可追溯归档</span></div></div>
+        <div class="grid">
+          <article class="card module-card project searchable" data-search="项目数据总览 项目管理 Go No-Go 负责人 里程碑 适应症 靶点 分子类型"><span class="stage green">核心模块</span><h3>项目数据总览</h3><p>聚合适应症、靶点、分子类型、负责人、阶段、里程碑、预算、风险和决策记录。</p><ul><li>项目看板与阶段跟踪</li><li>项目资料、实验和计算结果关联</li><li>Go/No-Go 决策证据链</li></ul><div class="module-actions"><a class="tiny-link dark" href="#projects">进入模块</a><a class="tiny-link" href="javascript:demoAlert('演示版：可对接项目管理库。')">上传项目资料</a></div></article>
+          <article class="card module-card exp searchable" data-search="实验记录 ELN LIMS 体外活性 动物药效 毒理 PK PD 组织分布"><span class="stage">实验数据</span><h3>实验记录库</h3><p>管理体外活性、动物药效、毒理、PK/PD、组织分布和实验方案。</p><ul><li>按项目、批次和实验类型归档</li><li>支持结果表格、图片和原始文件</li><li>与候选分子和计算结果关联</li></ul><div class="module-actions"><a class="tiny-link dark" href="#projects">查看记录</a><a class="tiny-link" href="javascript:demoAlert('演示版：后续可接入 ELN/LIMS 或内部表单。')">导入实验</a></div></article>
+          <article class="card module-card seq searchable" data-search="序列 结构 FASTA PDB mmCIF SMILES SDF 抗体 多肽 RNA 小分子"><span class="stage">文件资产</span><h3>序列与结构文件库</h3><p>集中管理FASTA、PDB/mmCIF、SMILES/SDF、抗体/多肽/RNA序列和结构文件。</p><ul><li>序列、结构和分子文件版本管理</li><li>自动提取格式、长度、链信息和来源</li><li>可直接作为模型输入文件</li></ul><div class="module-actions"><a class="tiny-link dark" href="#assets">查看文件</a><a class="tiny-link" href="javascript:demoAlert('演示版：后续可对接 NAS/对象存储。')">上传文件</a></div></article>
+          <article class="card module-card calc searchable" data-search="计算结果 Docking MD ADMET 单细胞 Geneformer 结构预测 任务 队列"><span class="stage orange">计算归档</span><h3>计算结果库</h3><p>归档Docking、MD、ADMET、单细胞分析、模型推理结果和自动报告。</p><ul><li>记录任务编号、参数、日志和结果</li><li>支持结果下载、图表预览和复用</li><li>对接公司集群和模型服务</li></ul><div class="module-actions"><a class="tiny-link dark" href="#assets">查看结果</a><a class="tiny-link local" href="cluster_login_v2_no_module.html">提交任务</a></div></article>
+
+          <article class="card module-card patent searchable" data-search="专利库 专利情报 权利要求 同族专利 序列表 竞品布局 专利绕开"><span class="stage">专利情报</span><h3>专利库</h3><p>集中管理专利全文、权利要求、同族专利、序列表、法律状态和竞品布局。</p><ul><li>按项目、靶点、分子类型和申请人管理</li><li>支持专利序列、Claim和关键保护范围归档</li><li>服务专利分析、FTO和绕开设计</li></ul><div class="module-actions"><a class="tiny-link dark" href="#patents">进入专利库</a><a class="tiny-link" href="javascript:demoAlert('演示版：后续可对接智慧芽、Google Patents 或内部专利表。')">导入专利</a></div></article>
+          <article class="card module-card report searchable" data-search="AI报告 报告归档 文献 专利 靶点 计算 自动报告 PPT Word Excel"><span class="stage purple">知识沉淀</span><h3>AI报告归档库</h3><p>保存文献专利解读、靶点证据、模型分析、计算结果和项目汇报材料。</p><ul><li>报告版本、作者和更新时间管理</li><li>支持Word/PPT/Excel/PDF统一归档</li><li>后续可接入智能体问答</li></ul><div class="module-actions"><a class="tiny-link dark" href="#assets">查看报告</a><a class="tiny-link" href="nohe_ai_platform_sunnovo_v10_chat_compact.html#assistant">调用智能体</a></div></article>
+          <article class="card module-card security searchable" data-search="权限 审计 项目级权限 SSO LDAP 访问日志 数据安全"><span class="stage green">安全合规</span><h3>权限与审计中心</h3><p>按项目、角色、部门和数据类型控制访问权限，记录上传、下载、调用和修改日志。</p><ul><li>项目级权限和角色分级</li><li>数据不出内网，敏感数据留痕</li><li>支持SSO/LDAP/企业微信集成</li></ul><div class="module-actions"><a class="tiny-link dark" href="#security">查看设计</a><a class="tiny-link warn" href="javascript:demoAlert('演示版：正式上线前需与IT确认账号体系和权限策略。')">权限配置</a></div></article>
+        </div>
+      </section>
+
+      <section id="projects">
+        <div class="section-head"><div><div class="section-kicker">Project & Experiment Records</div><h2>项目与实验记录示例</h2><p>展示数据库真实上线后的使用形态：按项目聚合靶点、分子、实验、计算结果和报告，避免资料分散在个人电脑、微信群和临时Excel里。</p></div></div>
+        <div class="grid">
+          <article class="card pad wide searchable" data-search="项目表 IPF siRNA FcRn CARM 小分子 抗体 项目管理">
+            <h3>项目数据表</h3><p>可按适应症、分子类型、项目阶段、负责人、更新时间进行筛选。</p>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>项目编号</th><th>方向</th><th>核心靶点/任务</th><th>分子类型</th><th>阶段</th><th>负责人</th><th>最近更新</th></tr></thead><tbody>
+              <tr><td>IPF-AI-001</td><td>肺纤维化</td><td>单细胞靶点发现</td><td>Target discovery</td><td><span class="badge green">分析中</span></td><td>生信/AI</td><td>2026-06-05</td></tr>
+              <tr><td>RNA-OLIGO-003</td><td>RNA药物</td><td>siRNA序列设计与脱靶评估</td><td>siRNA</td><td><span class="badge blue">模型验证</span></td><td>RNA组</td><td>2026-06-04</td></tr>
+              <tr><td>FC-PEP-002</td><td>FcRn</td><td>pH依赖结合与专利绕开</td><td>Peptide</td><td><span class="badge orange">计算筛选</span></td><td>CADD/AI</td><td>2026-06-02</td></tr>
+              <tr><td>SM-CADD-006</td><td>小分子</td><td>Docking + ADMET筛选</td><td>Small molecule</td><td><span class="badge purple">候选排序</span></td><td>小分子组</td><td>2026-05-31</td></tr>
+            </tbody></table></div>
+          </article>
+          <article class="card pad third searchable" data-search="实验记录 体外 动物 PK PD 毒理 组织分布">
+            <h3>最近实验记录</h3><p>示例：按项目批次沉淀实验结论和原始文件。</p>
+            <div class="asset-grid" style="grid-template-columns:1fr;">
+              <div class="asset"><div class="asset-top"><b>EXP-IPF-018</b><span class="badge green">已归档</span></div><p>成纤维细胞标志物验证；关联 IPF-AI-001 候选靶点。</p><div class="asset-meta"><span>qPCR</span><span>WB</span><span>Image</span></div></div>
+              <div class="asset"><div class="asset-top"><b>EXP-RNA-022</b><span class="badge blue">待复核</span></div><p>siRNA体外活性与脱靶验证；关联 RNA-OLIGO-003。</p><div class="asset-meta"><span>IC50</span><span>Off-target</span></div></div>
+              <div class="asset"><div class="asset-top"><b>EXP-PK-009</b><span class="badge orange">进行中</span></div><p>组织分布和PK/PD记录；后续回写计算报告。</p><div class="asset-meta"><span>PK</span><span>PD</span><span>Animal</span></div></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+
+      <section id="patents">
+        <div class="section-head"><div><div class="section-kicker">Patent Intelligence</div><h2>专利库与竞品情报示例</h2><p>用于沉淀专利全文、权利要求、序列表、同族专利、法律状态和竞品布局，服务项目立项、FTO分析、专利绕开和研发决策。</p></div><div class="tagbar"><span class="chip teal">专利全文</span><span class="chip orange">权利要求</span><span class="chip purple">序列表</span></div></div>
+        <div class="grid">
+          <article class="card pad wide searchable" data-search="专利库 专利表 权利要求 同族 专利号 申请人 序列 FTO 竞品">
+            <h3>专利情报表</h3><p>可按项目、申请人、靶点、序列、法律状态和优先权日期进行筛选。</p>
+            <div class="table-wrap"><table class="data-table"><thead><tr><th>专利编号</th><th>项目/方向</th><th>申请人</th><th>保护重点</th><th>状态</th><th>关联资产</th><th>最近更新</th></tr></thead><tbody>
+              <tr><td>PT-FCRN-001</td><td>FcRn / pH依赖结合</td><td>竞品公司A</td><td>多肽序列与结合位点</td><td><span class="badge orange">需FTO分析</span></td><td>FcRn_peptides.fa</td><td>2026-06-05</td></tr>
+              <tr><td>PT-SIRNA-014</td><td>RNA药物</td><td>竞品公司B</td><td>siRNA修饰与递送组合</td><td><span class="badge blue">监控中</span></td><td>siRNA_claims.xlsx</td><td>2026-06-04</td></tr>
+              <tr><td>PT-LNP-009</td><td>LNP递送</td><td>竞品公司C</td><td>脂质组成与摩尔比例</td><td><span class="badge green">已归档</span></td><td>LNP_family.pdf</td><td>2026-06-01</td></tr>
+              <tr><td>PT-SM-021</td><td>小分子</td><td>竞品公司D</td><td>核心母核与取代基范围</td><td><span class="badge purple">结构提取</span></td><td>claims_markush.sdf</td><td>2026-05-30</td></tr>
+            </tbody></table></div>
+          </article>
+          <article class="card pad third searchable" data-search="专利分析 权利要求 序列表 同族 竞品布局 绕开设计">
+            <h3>专利分析入口</h3><p>示例：将专利信息与AI平台、计算结果和项目报告打通。</p>
+            <div class="asset-grid" style="grid-template-columns:1fr;">
+              <div class="asset"><div class="asset-top"><b>权利要求拆解</b><span class="badge blue">Claim</span></div><p>提取保护范围、关键位点、序列规则和限制条件。</p><div class="asset-meta"><span>FTO</span><span>Claim chart</span></div></div>
+              <div class="asset"><div class="asset-top"><b>序列表归档</b><span class="badge green">Sequence</span></div><p>将专利中的多肽、抗体、siRNA、mRNA序列统一归档。</p><div class="asset-meta"><span>FASTA</span><span>SEQ ID</span></div></div>
+              <div class="asset"><div class="asset-top"><b>竞品布局监控</b><span class="badge orange">Watch</span></div><p>跟踪申请人、同族、法律状态和新公开专利。</p><div class="asset-meta"><span>Family</span><span>Legal</span></div></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="assets">
+        <div class="section-head"><div><div class="section-kicker">Files & Results</div><h2>序列结构、计算结果与AI报告</h2><p>数据库不仅保存最终报告，也保存输入文件、参数、日志和中间结果，方便复现和后续模型训练。</p></div></div>
+        <div class="grid">
+          <article class="card pad mid searchable" data-search="文件库 FASTA PDB SMILES SDF h5ad 结构序列 上传"><h3>序列与结构文件</h3><p>支持项目内文件集中上传、版本管理和模型输入复用。</p><div class="asset-grid">
+            <div class="asset"><div class="asset-top"><b>IPF_fibroblast.h5ad</b><span class="badge green">Single-cell</span></div><p>单细胞表达矩阵与metadata。</p><div class="asset-meta"><span>2.8GB</span><span>h5ad</span><span>IPF</span></div></div>
+            <div class="asset"><div class="asset-top"><b>FcRn_peptides.fa</b><span class="badge blue">FASTA</span></div><p>专利肽与候选肽序列合集。</p><div class="asset-meta"><span>FASTA</span><span>Peptide</span></div></div>
+            <div class="asset"><div class="asset-top"><b>lead_series.sdf</b><span class="badge purple">SDF</span></div><p>小分子候选结构与属性。</p><div class="asset-meta"><span>SDF</span><span>SMILES</span></div></div>
+            <div class="asset"><div class="asset-top"><b>patent_claims.xlsx</b><span class="badge orange">Patent</span></div><p>专利权利要求、同族、法律状态和序列信息整理表。</p><div class="asset-meta"><span>Claim</span><span>FTO</span></div></div>
+          </div><div class="upload-zone"><b>拖拽上传数据文件</b><br><span>支持 FASTA / PDB / mmCIF / SMILES / SDF / h5ad / CSV / XLSX / PDF</span></div></article>
+          <article class="card pad mid searchable" data-search="计算结果 Docking MD ADMET Geneformer 任务日志 报告"><h3>计算结果归档</h3><p>记录任务来源、参数、队列、结果文件和AI解读。</p><div class="table-wrap"><table class="data-table" style="min-width:620px"><thead><tr><th>任务编号</th><th>类型</th><th>状态</th><th>输出</th></tr></thead><tbody><tr><td>JOB-GF-0603-001</td><td>Geneformer靶点排序</td><td><span class="badge green">完成</span></td><td>HTML / XLSX / PNG</td></tr><tr><td>JOB-MD-0602-014</td><td>pH依赖MD模拟</td><td><span class="badge orange">运行中</span></td><td>Trajectory / RMSD</td></tr><tr><td>JOB-DK-0601-022</td><td>Vina批量对接</td><td><span class="badge green">完成</span></td><td>PDBQT / score.csv</td></tr><tr><td>JOB-ADMET-0531-006</td><td>ADMET预测</td><td><span class="badge blue">待复核</span></td><td>Report / table</td></tr></tbody></table></div></article>
+          <article class="card pad full searchable" data-search="报告归档 AI报告 文献 专利 靶点 计算 自动报告"><h3>AI报告归档</h3><p>后续可以把智能体生成的文献解读、专利分析、靶点筛选、模型计算和项目汇报统一归档，便于审阅和复用。</p><div class="asset-grid">
+            <div class="asset"><div class="asset-top"><b>IPF靶点发现分析报告</b><span class="badge green">已审阅</span></div><p>整合单细胞模型、文献证据、通路和候选靶点排序。</p><div class="asset-meta"><span>Geneformer</span><span>Open Targets</span><span>PPT</span></div></div>
+            <div class="asset"><div class="asset-top"><b>FcRn专利肽绕开计算报告</b><span class="badge orange">草稿</span></div><p>记录pH状态、结合姿势、MD结果和候选肽筛选逻辑。</p><div class="asset-meta"><span>MD</span><span>Docking</span><span>Patent</span></div></div>
+            <div class="asset"><div class="asset-top"><b>RNA靶向药物模型调研</b><span class="badge blue">归档</span></div><p>记录siRNA/mRNA/ASO相关模型、部署方式和数据需求。</p><div class="asset-meta"><span>RNA</span><span>Model matrix</span><span>DOCX</span></div></div>
+          </div></article>
+        </div>
+      </section>
+
+      <section id="security">
+        <div class="section-head"><div><div class="section-kicker">Governance</div><h2>权限、归档与AI接入</h2><p>正式上线时，数据库应与公司账号体系、文件存储、计算集群和智能体一起构成闭环。</p></div></div>
+        <div class="grid">
+          <article class="card pad mid searchable" data-search="接入流程 智能体 数据库 集群 RAG API"><h3>平台接入流程</h3><p>数据库作为AI平台的数据底座，既给研发人员查资料，也给智能体和本地模型提供可追溯数据来源。</p><div class="flow"><div class="flow-step"><b>数据上传</b><span>项目/实验/文件</span></div><div class="flow-step"><b>权限校验</b><span>项目级访问</span></div><div class="flow-step"><b>统一检索</b><span>关键词/向量</span></div><div class="flow-step"><b>模型调用</b><span>智能体/集群</span></div><div class="flow-step"><b>结果归档</b><span>报告/日志</span></div></div></article>
+          <article class="card pad mid searchable" data-search="数据安全 权限 审计 SSO LDAP 项目权限"><h3>权限与安全设计</h3><div class="notice"><strong>建议正式上线前确认：</strong>账号体系、项目权限、敏感数据范围、下载权限、操作日志、备份策略和外部模型调用边界。研发数据、专利序列和实验结果建议优先放在内网或私有化环境。</div><div class="quick-grid" style="grid-template-columns:repeat(2,1fr)"><div class="quick"><strong>项目级权限</strong><span>只开放给对应项目组。</span></div><div class="quick"><strong>操作日志</strong><span>上传、下载、修改、调用留痕。</span></div><div class="quick"><strong>数据备份</strong><span>重要文件定期快照与归档。</span></div><div class="quick"><strong>AI调用边界</strong><span>敏感数据不直接外发。</span></div></div></article>
+        </div>
+      </section>
+      <div class="no-results" id="noResults">没有找到匹配内容，可以换一个关键词试试。</div>
+    </div>
+    <footer class="footer">© 2026 SUNNOVO 阳光诺和研发数据库门户 · 项目 / 实验 / 序列结构 / 计算结果 / 专利库 / AI报告 / 权限审计</footer>
+  </main>
+</div>
+<script>
+  const navLinks = [...document.querySelectorAll('#sideNav a')];
+  const sections = navLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  function onScroll(){let current = sections[0]?.id;sections.forEach(sec => { if(sec.getBoundingClientRect().top < 120) current = sec.id; });navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));}
+  window.addEventListener('scroll', onScroll, {passive:true});
+  const search = document.getElementById('globalSearch');
+  const items = [...document.querySelectorAll('.searchable')];
+  const noResults = document.getElementById('noResults');
+  search.addEventListener('input', () => {
+    const q = search.value.trim().toLowerCase();let visible = 0;
+    items.forEach(el => {const hay = (el.dataset.search || el.textContent).toLowerCase();const show = !q || hay.includes(q);el.style.display = show ? '' : 'none'; if(show) visible++;});
+    noResults.style.display = (q && visible === 0) ? 'block' : 'none';
+  });
+  document.getElementById('smartQuery').addEventListener('keydown', e => { if(e.key === 'Enter') demoAlert('演示版：后续可接入统一检索、向量库和智能体问答。'); });
+  function demoAlert(msg){ alert(msg); }
+</script>
+</body>
+</html>
