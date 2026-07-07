@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>修饰序列位点高亮工具</title>
+  <style>
+    body { font-family: "Microsoft YaHei", Arial, sans-serif; margin: 24px; color: #1f2937; background: #f8fafc; }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    .hint { color: #64748b; margin-bottom: 18px; line-height: 1.6; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    label { font-weight: 700; display: block; margin-bottom: 6px; }
+    textarea { width: 100%; min-height: 120px; box-sizing: border-box; font-family: Consolas, "Courier New", monospace; font-size: 15px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; }
+    button { margin: 14px 8px 14px 0; padding: 9px 14px; border: 0; border-radius: 8px; background: #2563eb; color: white; font-weight: 700; cursor: pointer; }
+    button.secondary { background: #475569; }
+    .panel { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-top: 14px; }
+    .seq-output { font-family: Consolas, "Courier New", monospace; font-size: 16px; line-height: 1.9; word-break: break-all; white-space: pre-wrap; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .diff { color: #c00000; font-weight: 800; background: #fff1f2; padding: 0 1px; }
+    .muted { color: #64748b; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; background: white; }
+    th, td { border: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; font-family: Consolas, "Microsoft YaHei", monospace; }
+    th { background: #eef2ff; font-family: "Microsoft YaHei", Arial, sans-serif; }
+    .status { margin-top: 8px; color: #334155; }
+    .copy-notice { display: none; margin-top: 10px; padding: 9px 12px; border-radius: 8px; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 700; }
+    .copy-notice.error { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+    .options { margin: 8px 0; color: #334155; }
+    .copy-zone { user-select: text; overflow-x: auto; }
+    .copy-zone table { width: auto; min-width: 720px; }
+    .copy-zone td:first-child { white-space: nowrap; font-family: "Microsoft YaHei", Arial, sans-serif; font-weight: 700; }
+    .copy-zone .seq-cell { min-width: 520px; word-break: break-all; white-space: pre-wrap; }
+    .detail-wide { min-width: 1200px; font-size: 12px; }
+    .detail-wide th, .detail-wide td { padding: 4px 6px; }
+    .detail-wide th.group { text-align: center; background: #dbeafe; }
+    .batch-input { min-height: 150px; }
+    .result-block { margin-top: 12px; }
+    .result-title { margin: 10px 0 4px; font-weight: 800; color: #334155; }
+    .rules { margin: 8px 0 0 18px; line-height: 1.7; color: #475569; }
+    .footer-info { margin-top: 18px; padding: 12px 14px; border-radius: 10px; background: #f1f5f9; color: #475569; font-size: 13px; line-height: 1.7; text-align: center; }
+    .footer-info a { color: #2563eb; font-weight: 700; text-decoration: none; }
+    .footer-info a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>修饰序列位点高亮工具</h1>
+  <div class="hint">
+    用法：单条比对时，把目标序列和专利/修饰序列的 <code>ss</code>、<code>as</code> 分别粘贴进去，点击"开始比对"。批量比对时，直接从 Word/Excel的表格 复制 ss、as 两列粘贴到下方，每两行自动组成一组比对（第1行=目标，第2行=专利/修饰）。也支持四行两列=两组，以此类推。红色加粗表示同一裸碱基位点上的修饰类型不同，或裸碱基本身不同。
+    默认忽略 <code>s</code>、<code>*</code>、<code>-</code>、<code>VP</code> 这类不占核苷酸位点的连接/载体符号。
+  </div>
+
+  <div class="grid">
+    <div>
+      <label for="ssA">目标 ss 序列</label>
+      <textarea id="ssA" placeholder="例如：ascscugaAaUGCuu-dG-augausasa"></textarea>
+    </div>
+    <div>
+      <label for="asA">目标 as 序列</label>
+      <textarea id="asA" placeholder="例如：VPusUsaucAuCAagcaUuUcaggusgsc"></textarea>
+    </div>
+    <div>
+      <label for="ssB">专利 / 修饰 ss 序列</label>
+      <textarea id="ssB" placeholder="例如：mU*mC*mCmUmGmAmAmAfUfGfCmUmUmGmAmUmGmAmU*mA*mA"></textarea>
+    </div>
+    <div>
+      <label for="asB">专利 / 修饰 as 序列</label>
+      <textarea id="asB" placeholder="例如：mU*fU*mAmUfCmAfUmCmAmAmGmCmAfUmUfUmCmAmGmGmA*mG*mC"></textarea>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>批量输入</h2>
+    <div class="muted">从表格 直接复制 ss、as 两列粘贴到这里，每两行自动配对（第1行=目标，第2行=专利/修饰）。多组就多行，连续粘贴即可。</div>
+    <textarea id="batchInput" class="batch-input" placeholder="ss序列&#9;as序列"></textarea>
+  </div>
+
+  <div class="options">
+    <label style="font-weight:400;"><input type="checkbox" id="highlightGaps" /> 高亮插入/缺失位点</label>
+  </div>
+
+  <button onclick="runCompare()">开始比对</button>
+  <button onclick="runBatchCompare()">开始批量比对</button>
+  <button class="secondary" onclick="fillExample()">填入第1/2行示例</button>
+  <button class="secondary" onclick="fillBatchExample()">填入批量示例</button>
+  <button class="secondary" onclick="copyResult()">复制到 Excel</button>
+  <div id="copyNotice" class="copy-notice"></div>
+
+  <div class="panel">
+    <h2>高亮结果</h2>
+    <div class="muted">这里输出的是 Word 中第 2、4、5 列的格式：第一行目标序列，第二行专利/修饰序列和比对结果。</div>
+    <div id="wordLikeResult" class="copy-zone"></div>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Excel 复制区</h2>
+    <div class="muted">点击“复制到 Excel”后直接粘贴；如果浏览器拦截剪贴板，也可以手动选中下面两行三列表格复制。</div>
+    <div id="excelCopyZone" class="copy-zone"></div>
+  </div>
+
+  <div class="panel">
+    <h2>逐位点明细</h2>
+    <div id="detail" class="copy-zone"></div>
+  </div>
+
+  <div class="panel">
+    <h2>当前规则</h2>
+    <ul class="rules">
+      <li><code>mA/mU/mC/mG</code> 记为 2'-OMe；小写 <code>a/u/c/g</code> 也记为 2'-OMe。</li>
+      <li><code>fA/fU/fC/fG</code>、<code>Af/Uf/Cf/Gf</code> 和大写 <code>A/U/C/G</code> 记为 2'-F。</li>
+      <li><code>dA/dU/dC/dG</code> 记为 DNA。</li>
+      <li><code>s</code>、<code>*</code>、<code>-</code>、<code>VP</code> 不占核苷酸位点，只作为连接/载体符号保留在显示里。</li>
+      <li><code>(Ada)</code>、<code>[Ahd]</code> 这类括号整体作为一个特殊修饰核苷酸位点。</li>
+    </ul>
+  </div>
+
+  <div class="footer-info">
+    开发 by 创新办公室，韩中杰<br />
+    如需帮助，请联系：<a href="mailto:hanzhongjie@sun-novo.com">hanzhongjie@sun-novo.com</a>
+  </div>
+
+<script>
+var lastExcelHtml = "";
+var lastExcelText = "";
+var lastDisplayHtml = "";
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(ch) {
+    return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch] || ch;
+  });
+}
+
+function isBase(ch) { return /[ACGUTIacguti]/.test(ch || ""); }
+function baseOfToken(token) {
+  var m = token.match(/[ACGUTIacguti]/);
+  return m ? m[0].toUpperCase() : "";
+}
+
+function parseSequence(seq) {
+  var items = [];
+  var i = 0;
+  var pos = 0;
+  while (i < seq.length) {
+    var ch = seq[i];
+    if (/\s/.test(ch) || ch === "*" || ch === "-" || ch === "s") { i++; continue; }
+    if (seq.startsWith("VP", i)) { i += 2; continue; }
+
+    if (ch === "(" || ch === "[") {
+      var close = ch === "(" ? ")" : "]";
+      var j0 = seq.indexOf(close, i + 1);
+      if (j0 !== -1) {
+        var token0 = seq.slice(i, j0 + 1);
+        var base0 = baseOfToken(token0);
+        if (base0) {
+          items.push({pos: ++pos, token: token0, base: base0, mod: "SPECIAL", start: i, end: j0 + 1});
+          i = j0 + 1;
+          continue;
+        }
+      }
+    }
+
+    if ((ch === "m" || ch === "f" || ch === "d") && isBase(seq[i + 1])) {
+      var base1 = seq[i + 1].toUpperCase();
+      var token1 = seq.slice(i, i + 2);
+      var mod1 = ch === "m" ? "OMe" : (ch === "f" ? "F" : "DNA");
+      var j1 = i + 2;
+      if (seq[j1] === "s") { token1 += "s"; j1++; }
+      items.push({pos: ++pos, token: token1, base: base1, mod: mod1, start: i, end: j1});
+      i = j1;
+      continue;
+    }
+
+    if (isBase(ch)) {
+      var base2 = ch.toUpperCase();
+      var token2 = ch;
+      var mod2 = ch === ch.toLowerCase() ? "OMe" : "F";
+      var j2 = i + 1;
+      if (seq[j2] === "f") { token2 += "f"; mod2 = "F"; j2++; }
+      if (seq[j2] === "s") { token2 += "s"; j2++; }
+      items.push({pos: ++pos, token: token2, base: base2, mod: mod2, start: i, end: j2});
+      i = j2;
+      continue;
+    }
+    i++;
+  }
+  return items;
+}
+
+function alignItems(a, b) {
+  var n = a.length, m = b.length;
+  var score = Array.from({length: n + 1}, function() { return Array(m + 1).fill(0); });
+  var trace = Array.from({length: n + 1}, function() { return Array(m + 1).fill(""); });
+  var gapPenalty = -2;
+  for (var i0 = 1; i0 <= n; i0++) { score[i0][0] = i0 * gapPenalty; trace[i0][0] = "up"; }
+  for (var j0 = 1; j0 <= m; j0++) { score[0][j0] = j0 * gapPenalty; trace[0][j0] = "left"; }
+
+  for (var i = 1; i <= n; i++) {
+    for (var j = 1; j <= m; j++) {
+      var sameBase = a[i - 1].base === b[j - 1].base;
+      var diag = score[i - 1][j - 1] + (sameBase ? 3 : -1);
+      var up = score[i - 1][j] + gapPenalty;
+      var left = score[i][j - 1] + gapPenalty;
+      if (diag >= up && diag >= left) { score[i][j] = diag; trace[i][j] = "diag"; }
+      else if (up >= left) { score[i][j] = up; trace[i][j] = "up"; }
+      else { score[i][j] = left; trace[i][j] = "left"; }
+    }
+  }
+
+  var pairs = [];
+  var ii = n, jj = m;
+  while (ii > 0 || jj > 0) {
+    var step = trace[ii][jj];
+    if (ii > 0 && jj > 0 && (step === "diag" || !step)) {
+      pairs.push([ii - 1, jj - 1]);
+      ii--; jj--;
+    } else if (ii > 0 && (step === "up" || jj === 0)) {
+      pairs.push([ii - 1, null]);
+      ii--;
+    } else {
+      pairs.push([null, jj - 1]);
+      jj--;
+    }
+  }
+  return pairs.reverse();
+}
+
+function addRange(ranges, item) {
+  if (item) ranges.push([item.start, item.end]);
+}
+
+function renderHighlighted(seq, ranges) {
+  return renderHighlightedWithStyle(seq, ranges, 'color:#c00000;font-weight:800;background:#fff1f2;');
+}
+
+function renderHighlightedWithStyle(seq, ranges, style) {
+  return renderHighlightedWithWrapper(seq, ranges, function(text) {
+    return '<span class="diff" style="' + style + '">' + text + '</span>';
+  });
+}
+
+function renderHighlightedWithWrapper(seq, ranges, wrap) {
+  ranges.sort(function(x, y) { return x[0] - y[0]; });
+  var merged = [];
+  for (var k = 0; k < ranges.length; k++) {
+    var r = ranges[k];
+    if (!merged.length || r[0] > merged[merged.length - 1][1]) merged.push([r[0], r[1]]);
+    else merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], r[1]);
+  }
+  var html = "";
+  var cursor = 0;
+  for (var m = 0; m < merged.length; m++) {
+    var start = merged[m][0], end = merged[m][1];
+    html += escapeHtml(seq.slice(cursor, start));
+    html += wrap(escapeHtml(seq.slice(start, end)));
+    cursor = end;
+  }
+  html += escapeHtml(seq.slice(cursor));
+  return html || '<span class="muted">空</span>';
+}
+
+function compareOnePair(seqA, seqB, label, highlightGaps) {
+  var a = parseSequence(seqA);
+  var b = parseSequence(seqB);
+  var pairs = alignItems(a, b);
+  var rangesA = [], rangesB = [], detailRows = [];
+  var baseDiff = 0, modDiff = 0, gaps = 0;
+
+  for (var p = 0; p < pairs.length; p++) {
+    var ia = pairs[p][0], ib = pairs[p][1];
+    var left = ia === null ? null : a[ia];
+    var right = ib === null ? null : b[ib];
+    var status = "一致";
+    if (!left || !right) {
+      status = "插入/缺失";
+      gaps++;
+      if (highlightGaps) { addRange(rangesA, left); addRange(rangesB, right); }
+    } else if (left.base !== right.base) {
+      status = "裸碱基不同";
+      baseDiff++;
+      addRange(rangesA, left); addRange(rangesB, right);
+    } else if (left.mod !== right.mod) {
+      status = "修饰不同";
+      modDiff++;
+      addRange(rangesA, left); addRange(rangesB, right);
+    }
+    detailRows.push({label: label, alignNo: p + 1, left: left, right: right, status: status});
+  }
+
+  return {
+    label: label,
+    seqA: seqA,
+    seqB: seqB,
+    lenA: a.length,
+    lenB: b.length,
+    baseDiff: baseDiff,
+    modDiff: modDiff,
+    gaps: gaps,
+    htmlA: renderHighlighted(seqA, rangesA),
+    htmlB: renderHighlighted(seqB, rangesB),
+    detailRows: detailRows
+  };
+}
+
+function makeSummary(ss, as) {
+  var parts = [];
+  if (ss.gaps || as.gaps) {
+    var gapParts = [];
+    if (ss.gaps) gapParts.push("ss有" + ss.gaps + "个插入/缺失");
+    if (as.gaps) gapParts.push("as有" + as.gaps + "个插入/缺失");
+    parts.push(gapParts.join("，"));
+  }
+
+  if (!ss.gaps && !as.gaps && ss.baseDiff === 0 && as.baseDiff === 0) {
+    parts.push("裸序列完全相同");
+  } else if (!ss.gaps && !as.gaps && ss.baseDiff === as.baseDiff && ss.baseDiff > 0) {
+    parts.push("裸序列ss/as各有" + ss.baseDiff + "nt不同");
+  } else {
+    var baseParts = [];
+    if (ss.baseDiff) baseParts.push("ss有" + ss.baseDiff + "nt不同");
+    if (as.baseDiff) baseParts.push("as有" + as.baseDiff + "nt不同");
+    if (baseParts.length) parts.push("裸序列" + baseParts.join("，"));
+  }
+
+  if (ss.modDiff + as.modDiff > 0) {
+    parts.push("修饰不同");
+  } else {
+    parts.push("修饰相同");
+  }
+  return parts.join("，");
+}
+
+function buildWordLikeHtml(summary, ssTargetHtml, asTargetHtml, ssPatentHtml, asPatentHtml) {
+  var style = 'border-collapse:collapse;font-family:Consolas,Microsoft YaHei,Arial,sans-serif;font-size:12pt;';
+  var td = 'border:1px solid #d9d9d9;padding:6px 8px;vertical-align:top;';
+  return '<table style="' + style + '">' +
+    '<tbody><tr><td style="' + td + 'font-family:Microsoft YaHei,Arial,sans-serif;font-weight:700;">目标序列</td>' +
+    '<td style="' + td + 'mso-number-format:\\@;white-space:normal;">' + ssTargetHtml + '</td>' +
+    '<td style="' + td + 'mso-number-format:\\@;white-space:normal;">' + asTargetHtml + '</td></tr>' +
+    '<tr><td style="' + td + 'font-family:Microsoft YaHei,Arial,sans-serif;font-weight:700;">' + escapeHtml(summary) + '</td>' +
+    '<td style="' + td + 'mso-number-format:\\@;white-space:normal;">' + ssPatentHtml + '</td>' +
+    '<td style="' + td + 'mso-number-format:\\@;white-space:normal;">' + asPatentHtml + '</td></tr></tbody></table>';
+}
+
+function plainRowsForResult(result) {
+  return [
+    ["目标序列", result.ss.seqA, result.as.seqA],
+    [result.summary, result.ss.seqB, result.as.seqB]
+  ];
+}
+
+function detailCells(row, label) {
+  if (!row) {
+    return '<td>' + label + '</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>';
+  }
+  var cls = row.status === "一致" ? "" : ' class="diff"';
+  return '<td' + cls + '>' + escapeHtml(row.label) + '</td><td' + cls + '>' + row.alignNo + '</td><td' + cls + '>' +
+    escapeHtml(row.left ? row.left.token : "-") + '</td><td' + cls + '>' +
+    escapeHtml(row.left ? row.left.base + "/" + row.left.mod : "-") + '</td><td' + cls + '>' +
+    escapeHtml(row.right ? row.right.token : "-") + '</td><td' + cls + '>' +
+    escapeHtml(row.right ? row.right.base + "/" + row.right.mod : "-") + '</td><td' + cls + '>' +
+    row.status + '</td>';
+}
+
+function buildDetailTable(ssRows, asRows) {
+  var headers = '<tr><th>链</th><th>对齐序号</th><th>内部 token</th><th>内部 base/mod</th><th>专利 token</th><th>专利 base/mod</th><th>结果</th>';
+  headers += '<th>链</th><th>对齐序号</th><th>内部 token</th><th>内部 base/mod</th><th>专利 token</th><th>专利 base/mod</th><th>结果</th></tr>';
+  var table = '<table class="detail-wide"><thead><tr><th class="group" colspan="7">ss 逐位点</th><th class="group" colspan="7">as 逐位点</th></tr>' + headers + '</thead><tbody>';
+  var maxRows = Math.max(ssRows.length, asRows.length);
+  for (var d = 0; d < maxRows; d++) {
+    table += '<tr>' + detailCells(ssRows[d], "ss") + detailCells(asRows[d], "as") + '</tr>';
+  }
+  table += "</tbody></table>";
+  return table;
+}
+
+function compareJob(job, index) {
+  var highlightGaps = document.getElementById("highlightGaps").checked;
+  var ss = compareOnePair(job.ssA.trim(), job.ssB.trim(), "ss", highlightGaps);
+  var as = compareOnePair(job.asA.trim(), job.asB.trim(), "as", highlightGaps);
+  var summary = makeSummary(ss, as);
+  var statusText = "ss解析位点：目标 = " + ss.lenA + "，专利 = " + ss.lenB +
+    "；as解析位点：目标 = " + as.lenA + "，专利 = " + as.lenB +
+    "；裸碱基差异 ss/as = " + ss.baseDiff + "/" + as.baseDiff +
+    "；修饰差异 ss/as = " + ss.modDiff + "/" + as.modDiff +
+    "；插入/缺失 ss/as = " + ss.gaps + "/" + as.gaps + "。";
+  return {index: index, ss: ss, as: as, summary: summary, statusText: statusText};
+}
+
+function resultBlockHtml(result) {
+  return '<div class="result-block"><div class="result-title">第 ' + result.index + ' 组</div>' +
+    buildWordLikeHtml(result.summary, result.ss.htmlA, result.as.htmlA, result.ss.htmlB, result.as.htmlB) +
+    '<div class="status">' + escapeHtml(result.statusText) + '</div></div>';
+}
+
+function excelHtmlForResult(result) {
+  return buildWordLikeHtml(result.summary, result.ss.htmlA, result.as.htmlA, result.ss.htmlB, result.as.htmlB);
+}
+
+function applyResults(results) {
+  lastDisplayHtml = results.map(resultBlockHtml).join("");
+  lastExcelHtml = results.map(excelHtmlForResult).join("<br />");
+  lastExcelText = results.map(function(result) {
+    return plainRowsForResult(result).map(function(row) { return row.join("\t"); }).join("\n");
+  }).join("\n\n");
+  document.getElementById("wordLikeResult").innerHTML = lastDisplayHtml;
+  document.getElementById("excelCopyZone").innerHTML = lastExcelHtml;
+  document.getElementById("status").innerHTML = "共完成 " + results.length + " 组比对。";
+  document.getElementById("detail").innerHTML = results.map(function(result) {
+    return '<div class="result-title">第 ' + result.index + ' 组逐位点明细</div>' +
+      buildDetailTable(result.ss.detailRows, result.as.detailRows);
+  }).join("");
+}
+
+function runCompare() {
+  applyResults([compareJob({
+    ssA: document.getElementById("ssA").value,
+    asA: document.getElementById("asA").value,
+    ssB: document.getElementById("ssB").value,
+    asB: document.getElementById("asB").value
+  }, 1)]);
+}
+
+function parseBatchInput(text) {
+  var rows = text.split(/\r?\n/);
+  var jobs = [];
+  var headerMap = null;
+  var colCount = 0;
+
+  function normalizeHeader(s) {
+    return String(s || "").toLowerCase().replace(/\s+/g, "").replace(/_/g, "");
+  }
+
+  function detectHeader(cols) {
+    var map = {};
+    for (var c = 0; c < cols.length; c++) {
+      var h = normalizeHeader(cols[c]);
+      if ((h.includes("\u76ee\u6807") || h.includes("target")) && h.includes("ss")) map.ssA = c;
+      if ((h.includes("\u76ee\u6807") || h.includes("target")) && h.includes("as")) map.asA = c;
+      if ((h.includes("\u4e13\u5229") || h.includes("patent") || h.includes("\u4fee\u9970")) && h.includes("ss")) map.ssB = c;
+      if ((h.includes("\u4e13\u5229") || h.includes("patent") || h.includes("\u4fee\u9970")) && h.includes("as")) map.asB = c;
+    }
+    return map.ssA !== undefined && map.asA !== undefined && map.ssB !== undefined && map.asB !== undefined ? map : null;
+  }
+
+  // First pass: detect column count (skip blank rows)
+  var dataRows = [];
+  for (var i = 0; i < rows.length; i++) {
+    var line = rows[i].trim();
+    if (!line) continue;
+    var cols = line.split(/\t/);
+    if (cols.length < 2) cols = line.split(/\s{2,}/);
+    if (cols.length < 2) continue;
+    dataRows.push(cols);
+    if (colCount === 0) colCount = cols.length;
+  }
+
+  // 2-column mode: every 2 rows = one comparison (target=even, patent=odd)
+  if (colCount === 2) {
+    for (var r = 0; r < dataRows.length; r += 2) {
+      var target = dataRows[r];
+      var patent = dataRows[r + 1];
+      if (!patent) break; // odd row count, skip last orphan
+      jobs.push({
+        ssA: target[0], asA: target[1],
+        ssB: patent[0], asB: patent[1]
+      });
+    }
+  }
+  // 4-column mode: each row = one comparison
+  else if (colCount >= 4) {
+    var headerDetected = false;
+    for (var r = 0; r < dataRows.length; r++) {
+      var cols = dataRows[r];
+      if (!headerDetected && headerMap === null) {
+        headerMap = detectHeader(cols);
+        if (headerMap) { headerDetected = true; continue; }
+      }
+      if (headerMap) {
+        jobs.push({ssA: cols[headerMap.ssA], asA: cols[headerMap.asA], ssB: cols[headerMap.ssB], asB: cols[headerMap.asB]});
+      } else {
+        jobs.push({ssA: cols[0], asA: cols[1], ssB: cols[2], asB: cols[3]});
+      }
+    }
+  }
+
+  return jobs;
+}
+
+function runBatchCompare() {
+  var jobs = parseBatchInput(document.getElementById("batchInput").value);
+  if (!jobs.length) {
+    showCopyMessage("批量输入为空，请检查粘贴内容。需要两列（ss、as，每两行一组对比）或四列（每行一组对比）。", true);
+    return;
+  }
+  applyResults(jobs.map(function(job, idx) {
+    return compareJob(job, idx + 1);
+  }));
+}
+
+function fillExample() {
+  document.getElementById("ssA").value = "ascscugaAaUGCuu-dG-augausasa";
+  document.getElementById("asA").value = "VPusUsaucAuCAagcaUuUcaggusgsc";
+  document.getElementById("ssB").value = "mU*mC*mCmUmGmAmAmAfUfGfCmUmUmGmAmUmGmAmU*mA*mA";
+  document.getElementById("asB").value = "mU*fU*mAmUfCmAfUmCmAmAmGmCmAfUmUfUmCmAmGmGmA*mG*mC";
+  runCompare();
+}
+
+function fillBatchExample() {
+  // 两列模式：每两行一组（第1行=目标，第2行=专利/修饰）
+  var pair1 = [
+    "ascscugaAaUGCuu-dG-augausasa\tVPusUsaucAuCAagcaUuUcaggusgsc",
+    "mU*mC*mCmUmGmAmAmAfUfGfCmUmUmGmAmUmGmAmU*mA*mA\tmU*fU*mAmUfCmAfUmCmAmAmGmCmAfUmUfUmCmAmGmGmA*mG*mC"
+  ].join("\n");
+  var pair2 = [
+    "ascscugaAaUGCuu-dG-augausasa\tVPusUsaucAuCAagcaUuUcaggusgsc",
+    "mU*mC*mCmUmG[Ahd]mAmAfUfGfCmUmUmGmAmUmGmAmU*mA*mA\tmU*fU*mAmUfCmAfUmCmAmAmGmCmAfUmUfUmCmAmGmGmA*mG*mC"
+  ].join("\n");
+  document.getElementById("batchInput").value = pair1 + "\n\n" + pair2;
+  runBatchCompare();
+}
+
+function fallbackCopyHtml(html) {
+  var holder = document.createElement("div");
+  holder.contentEditable = "true";
+  holder.style.position = "fixed";
+  holder.style.left = "-9999px";
+  holder.style.top = "0";
+  holder.innerHTML = html;
+  document.body.appendChild(holder);
+  var range = document.createRange();
+  range.selectNodeContents(holder);
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  var ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  sel.removeAllRanges();
+  document.body.removeChild(holder);
+  return ok;
+}
+
+function showCopyMessage(message, isError) {
+  var notice = document.getElementById("copyNotice");
+  notice.textContent = message;
+  notice.className = isError ? "copy-notice error" : "copy-notice";
+  notice.style.display = "block";
+  if (!isError) {
+    clearTimeout(showCopyMessage.timer);
+    showCopyMessage.timer = setTimeout(function() {
+      notice.style.display = "none";
+    }, 3500);
+  }
+}
+
+async function copyResult() {
+  if (!lastExcelHtml) runCompare();
+  try {
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([lastExcelHtml], {type: "text/html"}),
+          "text/plain": new Blob([lastExcelText], {type: "text/plain"})
+        })
+      ]);
+      showCopyMessage("已复制。现在可以直接粘贴到 Excel。", false);
+      return;
+    }
+    if (fallbackCopyHtml(lastExcelHtml)) {
+      showCopyMessage("已复制。现在可以直接粘贴到 Excel。", false);
+      return;
+    }
+    throw new Error("copy blocked");
+  } catch (e) {
+    showCopyMessage("浏览器拦截了自动复制。请手动选中“Excel 复制区”的表格后复制，再粘贴到 Excel。", true);
+  }
+}
+
+fillExample();
+</script>
+</body>
+</html>
