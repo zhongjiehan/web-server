@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUNNOVO 分子可视化工具</title>
+  <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+<style>
+:root{
+  --bg:#f5f8fc; --surface:#ffffff; --ink:#172033; --muted:#5d6c82;
+  --light:#8b99ad; --line:#e3eaf3; --brand:#075d80; --brand-2:#1178a5;
+  --brand-3:#10b7a5; --brand-4:#ff8a00;
+  --radius:22px; --radius-sm:15px;
+  --font:"Inter","SF Pro Display","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  --shadow:0 18px 48px rgba(26,48,78,.09); --shadow-sm:0 8px 24px rgba(26,48,78,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:var(--font); background:radial-gradient(circle at 82% 0%, rgba(16,183,165,.15), transparent 32%),
+  radial-gradient(circle at 2% 8%, rgba(17,120,165,.13), transparent 34%), var(--bg);
+  color:var(--ink); line-height:1.62; min-height:100vh;
+}
+a{text-decoration:none;color:inherit;}
+::selection{background:rgba(16,183,165,.25);}
+.app{display:flex;min-height:100vh;}
+.side{
+  width:340px; flex:0 0 340px; background:rgba(255,255,255,.92);
+  border-right:1px solid var(--line); padding:18px 16px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:14px; height:100vh; position:sticky; top:0;
+}
+.side-header{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line);}
+.side-header .logo{width:36px;height:36px;border-radius:12px;background:#fff;border:1px solid var(--line);display:grid;place-items:center;font-size:18px;}
+.side-header h1{font-size:16px;font-weight:900;}
+.side-header small{font-size:11px;color:var(--light);display:block;}
+.tab-bar{display:flex;gap:4px;background:#f0f4f9;border-radius:12px;padding:3px;}
+.tab-btn{flex:1;padding:8px 6px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;
+  background:transparent;color:var(--muted);transition:.2s;text-align:center;}
+.tab-btn.active{background:#fff;color:var(--brand);box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.panel{display:none;flex-direction:column;gap:12px;}
+.panel.active{display:flex;}
+.panel-group{background:#f8fafc;border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px;}
+.panel-label{font-size:11px;font-weight:900;color:var(--light);letter-spacing:1.2px;margin-bottom:8px;}
+.panel-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+input,textarea,select{
+  font:inherit;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;
+  background:#fff;outline:none;transition:.2s;width:100%;color:var(--ink);
+}
+input:focus,textarea:focus,select:focus{border-color:var(--brand-3);box-shadow:0 0 0 3px rgba(16,183,165,.12);}
+textarea{resize:vertical;min-height:50px;font-family:monospace;}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:none;border-radius:12px;padding:8px 16px;font-size:12px;font-weight:800;cursor:pointer;
+  transition:.2s;white-space:nowrap;
+}
+.btn-solid{background:linear-gradient(135deg,#0f766e,#0891b2);color:#fff;box-shadow:0 6px 16px rgba(15,118,110,.18);}
+.btn-solid:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(15,118,110,.22);}
+.btn-soft{background:#f0fdfa;color:#0f766e;border:1px solid #99f6e4;}
+.btn-soft:hover{background:#ccfbf1;}
+.btn-outline{background:#fff;color:var(--muted);border:1px solid var(--line);}
+.btn-outline:hover{border-color:var(--brand-3);color:var(--brand);}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:8px;}
+.btn-xs{padding:3px 7px;font-size:10px;border-radius:6px;}
+.drop-zone{
+  border:2px dashed var(--line);border-radius:var(--radius-sm);padding:24px 16px;
+  text-align:center;cursor:pointer;transition:.2s;background:rgba(255,255,255,.6);
+}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--brand-3);background:rgba(16,183,165,.04);}
+.drop-zone svg{width:32px;height:32px;stroke:var(--light);margin-bottom:8px;}
+.drop-zone p{font-size:12px;color:var(--muted);}
+.drop-zone small{font-size:11px;color:var(--light);}
+.main{flex:1;display:flex;flex-direction:column;position:relative;}
+.topbar{
+  height:52px;background:rgba(255,255,255,.82);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;
+  justify-content:space-between;padding:0 24px;flex-shrink:0;
+}
+.topbar .info{font-size:13px;color:var(--muted);font-weight:700;}
+.topbar .info strong{color:var(--brand);}
+.topbar .actions{display:flex;gap:8px;}
+.viewer-wrap{flex:1;position:relative;min-height:400px;}
+#molViewer{width:100%;height:100%;position:absolute;inset:0;background:linear-gradient(135deg,#f8fafc,#ecfeff);}
+.viewer-status{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border:1px solid var(--line);
+  border-radius:999px;padding:6px 16px;font-size:12px;color:var(--muted);white-space:nowrap;z-index:5;
+}
+.viewer-status .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-right:6px;}
+#mol2d{
+  position:absolute;top:12px;right:12px;width:200px;height:200px;
+  background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-sm);z-index:4;overflow:hidden;
+}
+#mol2d canvas{width:100%;height:100%;}
+#sketcherCanvas{
+  width:100%;height:200px;border:1px solid var(--line);border-radius:var(--radius-sm);
+  background:#fff;cursor:crosshair;display:block;touch-action:none;
+}
+.sketch-tools{display:flex;gap:4px;flex-wrap:wrap;padding:6px 0;}
+.sketch-btn{
+  width:32px;height:32px;border:1px solid var(--line);border-radius:8px;background:#fff;
+  font-size:13px;font-weight:800;cursor:pointer;transition:.2s;display:grid;place-items:center;
+}
+.sketch-btn.active{border-color:var(--brand-3);background:rgba(16,183,165,.1);color:var(--brand);}
+.sketch-btn:hover{border-color:var(--brand-3);}
+.lib-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.lib-chip{
+  padding:5px 11px;border:1px solid var(--line);border-radius:999px;font-size:11px;font-weight:700;
+  color:var(--muted);background:#fff;cursor:pointer;transition:.2s;
+}
+.lib-chip:hover{border-color:var(--brand-3);color:var(--brand);background:rgba(16,183,165,.04);}
+.lib-chip.active{border-color:var(--brand-3);color:#fff;background:linear-gradient(135deg,#0f766e,#0891b2);}
+.rep-group{display:flex;gap:4px;flex-wrap:wrap;}
+.rep-btn{
+  padding:5px 10px;border:1px solid var(--line);border-radius:8px;font-size:11px;font-weight:700;
+  color:var(--muted);background:#fff;cursor:pointer;transition:.2s;
+}
+.rep-btn.active{border-color:var(--brand-3);color:var(--brand);background:rgba(16,183,165,.08);}
+.rep-btn:hover{border-color:var(--brand-3);}
+.color-swatches{display:flex;gap:4px;flex-wrap:wrap;}
+.color-swatch{
+  width:24px;height:24px;border-radius:8px;border:2px solid transparent;cursor:pointer;transition:.15s;
+}
+.color-swatch.active{border-color:var(--brand);box-shadow:0 0 0 2px #fff,0 0 0 4px var(--brand);}
+.color-swatch:hover{transform:scale(1.1);}
+.footer-link{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);text-align:center;}
+.footer-link a{font-size:12px;color:var(--light);font-weight:700;}
+.footer-link a:hover{color:var(--brand);}
+@media(max-width:1024px){
+  .app{flex-direction:column;}
+  .side{width:100%;flex:none;height:auto;position:static;max-height:50vh;}
+  .topbar{height:auto;padding:12px 16px;flex-wrap:wrap;gap:8px;}
+  .viewer-wrap{min-height:350px;}
+}
+@media(max-width:600px){
+  .side{padding:12px;max-height:40vh;}
+  #mol2d{width:140px;height:140px;top:8px;right:8px;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="side-header"><div class="logo">🧬</div><div><h1>分子可视化</h1><small>SUNNOVO Molecular Viewer</small></div></div>
+    <div class="tab-bar">
+      <button class="tab-btn active" data-panel="input" onclick="switchPanel('input')">📥 输入</button>
+      <button class="tab-btn" data-panel="sketch" onclick="switchPanel('sketch')">✏️ 画板</button>
+      <button class="tab-btn" data-panel="library" onclick="switchPanel('library')">📚 示例</button>
+    </div>
+    <div class="panel active" id="panel-input">
+      <div class="panel-group">
+        <div class="panel-label">SMILES 输入</div>
+        <textarea id="smilesInput" rows="2" placeholder="输入SMILES，例如：CC(=O)Nc1ccc(O)cc1 (对乙酰氨基酚)"></textarea>
+        <div class="panel-row" style="margin-top:6px;">
+          <button class="btn btn-solid" onclick="loadFromSMILES()">加载3D结构</button>
+          <button class="btn btn-soft" onclick="document.getElementById('smilesInput').value='';update2D()">清空</button>
+        </div>
+      </div>
+      <div class="panel-group">
+        <div class="panel-label">上传文件</div>
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p>拖拽文件到此处，或点击选择</p>
+          <small>支持 .sdf .pdb .mol2 .pdbqt .mol .xyz</small>
+          <input type="file" id="fileInput" accept=".sdf,.pdb,.mol2,.pdbqt,.mol,.xyz,.smi,.txt" style="display:none" multiple onchange="handleFiles(this.files)" />
+        </div>
+      </div>
+      <div class="panel-group">
+        <div class="panel-label">显示模式</div>
+        <div class="panel-label" style="font-size:11px;margin-bottom:4px;">蛋白/大分子</div>
+        <div class="rep-group" id="repProtein">
+          <button class="rep-btn active" data-style="cartoon" onclick="setRep('protein','cartoon')">Cartoon</button>
+          <button class="rep-btn" data-style="sticks" onclick="setRep('protein','sticks')">Sticks</button>
+          <button class="rep-btn" data-style="lines" onclick="setRep('protein','lines')">Lines</button>
+          <button class="rep-btn" data-style="surface" onclick="setRep('protein','surface')">Surface</button>
+          <button class="rep-btn" data-style="spheres" onclick="setRep('protein','spheres')">Spheres</button>
+        </div>
+        <div class="panel-label" style="font-size:11px;margin:6px 0 4px;">小分子/配体</div>
+        <div class="rep-group" id="repLigand">
+          <button class="rep-btn active" data-style="sticks" onclick="setRep('ligand','sticks')">Sticks</button>
+          <button class="rep-btn" data-style="lines" onclick="setRep('ligand','lines')">Lines</button>
+          <button class="rep-btn" data-style="spheres" onclick="setRep('ligand','spheres')">Spheres</button>
+          <button class="rep-btn" data-style="ballstick" onclick="setRep('ligand','ballstick')">Ball&amp;Stick</button>
+        </div>
+      </div>
+      <div class="panel-group">
+        
+      </div>
+      <div class="panel-group">
+        <div class="panel-label">背景</div>
+        <div class="panel-row">
+          <button class="btn btn-sm btn-outline active" data-bg="#f8fafc" onclick="setBg('#f8fafc')">浅色</button>
+          <button class="btn btn-sm btn-outline" data-bg="#0f172a" onclick="setBg('#0f172a')">深色</button>
+          <button class="btn btn-sm btn-outline" data-bg="#ffffff" onclick="setBg('#ffffff')">白色</button>
+          <button class="btn btn-sm btn-outline" data-bg="transparent" onclick="setBg('transparent')">透明</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="panel-sketch">
+      <div class="panel-group">
+        <div class="panel-label">原子画笔 <span style="font-weight:400;color:var(--muted);font-size:10px;">点击画布放置原子</span></div>
+        <div class="sketch-tools" id="sketchAtoms">
+          <button class="sketch-btn active" data-atom="C">C</button>
+          <button class="sketch-btn" data-atom="N">N</button>
+          <button class="sketch-btn" data-atom="O">O</button>
+          <button class="sketch-btn" data-atom="S">S</button>
+          <button class="sketch-btn" data-atom="F">F</button>
+          <button class="sketch-btn" data-atom="Cl">Cl</button>
+          <button class="sketch-btn" data-atom="Br">Br</button>
+          <button class="sketch-btn" data-atom="P">P</button>
+        </div>
+        <div class="panel-label" style="margin-top:6px;">键类型 <span style="font-weight:400;color:var(--muted);font-size:10px;">点击两个原子连键</span></div>
+        <div class="sketch-tools">
+          <button class="sketch-btn active" data-bond="1">—</button>
+          <button class="sketch-btn" data-bond="2">＝</button>
+          <button class="sketch-btn" data-bond="3">≡</button>
+        </div>
+        <div class="panel-label" style="margin-top:6px;">模板环</div>
+        <div class="sketch-tools">
+          <button class="sketch-btn" onclick="addRing('benzene')" title="加苯环">◉ 苯</button>
+          <button class="sketch-btn" onclick="addRing('cyclohexane')" title="加环己烷">⬡ 环己</button>
+          <button class="sketch-btn" onclick="addRing('cyclopentane')" title="加环戊烷">⬠ 环戊</button>
+          <button class="sketch-btn" onclick="addRing('pyridine')" title="加吡啶">◈ 吡啶</button>
+        </div>
+      </div>
+      <div class="panel-group" style="padding:8px;">
+        <canvas id="sketcherCanvas"></canvas>
+        <div class="panel-row" style="margin-top:6px;">
+          <button class="btn btn-sm btn-soft" onclick="clearSketch()">🗑 清空</button>
+          <button class="btn btn-sm btn-solid" onclick="loadFromSketch()">🔄 加载到3D</button>
+          <span id="sketchSmiles" style="font-size:11px;color:var(--light);font-family:monospace;flex:1;text-align:right;word-break:break-all;"></span>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="panel-library">
+      <div class="panel-group">
+        <div class="panel-label">内置示例分子</div>
+        <div class="lib-chips" id="libChips"></div>
+      </div>
+      <div class="panel-group">
+        <div class="panel-label">工具</div>
+        <div class="panel-row">
+          <button class="btn btn-sm btn-soft" onclick="takeScreenshot()">📷 截图</button>
+          <button class="btn btn-sm btn-soft" onclick="toggleLabels()">🏷️ 标签</button>
+          <button class="btn btn-sm btn-soft" onclick="resetView()">⟲ 复位</button>
+          <button class="btn btn-sm btn-outline" onclick="viewer&&(viewer.zoomTo(),viewer.render())">自适应</button>
+        </div>
+        <p style="margin-top:8px;font-size:11px;color:var(--muted);">🖱 左键旋转 · 滚轮缩放 · 右键平移 · 支持拖拽文件到上传区</p>
+      </div>
+    </div>
+    <div class="footer-link"><a href="index.html">← 返回 SUNNOVO 研发AI平台</a></div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="info">当前分子: <strong id="molName">未加载</strong></div>
+      <div class="actions"></div>
+    </div>
+    <div class="viewer-wrap">
+      <div id="molViewer"></div>
+      <div id="mol2d"><canvas id="mol2dCanvas"></canvas></div>
+      <div class="viewer-status"><span class="dot"></span><span id="statusText">就绪，输入SMILES或上传文件</span></div>
+    </div>
+  </main>
+</div>
+<script>
+let viewer=null, molModels={protein:null,ligand:null}, currentReps={protein:'cartoon',ligand:'sticks'};
+let currentColor='spectrum', showLabels=false, currentBg='#f8fafc';
+
+function initViewer(){
+  const el=document.getElementById('molViewer');
+  if(!window.$3Dmol){el.innerHTML='<div style="display:grid;place-items:center;height:100%;padding:40px;text-align:center;"><strong>3Dmol.js加载失败</strong><br><span>请确认可访问 https://3Dmol.org</span></div>';return false;}
+  viewer=$3Dmol.createViewer(el,{backgroundColor:currentBg});return true;
+}
+function switchPanel(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.panel===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+name));
+}
+async function loadFromSMILES(){
+  const s=document.getElementById('smilesInput').value.trim();if(!s){setStatus('请先输入SMILES');return;}
+  setStatus('正在生成3D结构...');
+  document.getElementById('molName').textContent=s.length>30?s.slice(0,27)+'...':s;
+  const url='https://cactus.nci.nih.gov/chemical/structure/'+encodeURIComponent(s)+'/sdf';
+  try{
+    const resp=await fetch(url,{mode:'cors'});
+    if(resp.ok){loadSDF(await resp.text(),'ligand','sdf');setStatus('3D结构加载成功');}
+    else throw new Error('API '+resp.status);
+  }catch(e){
+    console.warn(e);
+    setStatus('在线3D生成失败(网络限制)，仅显示2D');
+    if(viewer) viewer.clear();
+    update2D();
+  }
+}
+function loadSDF(data,type='ligand',format='sdf'){
+  if(!viewer&&!initViewer())return;viewer.clear();
+  molModels={protein:null,ligand:null};
+  try{
+    const model=viewer.addModel(data,format);
+    if(type==='protein'){molModels.protein=model;applyProteinRep();}
+    else{molModels.ligand=model;applyLigandRep();}
+    viewer.zoomTo();viewer.render();
+    update2D();
+    
+  }catch(e){setStatus('解析失败: '+e.message);}
+}
+function loadPDB(d){loadSDF(d,'protein','pdb');}
+function loadMolecule(d){loadSDF(d,'ligand','pdb');}
+function loadMOL2(d){loadSDF(d,'ligand','mol2');}
+function setRep(target,style){
+  currentReps[target]=style;
+  document.querySelectorAll('#rep'+target.charAt(0).toUpperCase()+target.slice(1)+' .rep-btn').forEach(b=>b.classList.toggle('active',b.dataset.style===style));
+  applyReps();
+}
+function getColorScheme(){
+  if(currentColor==='spectrum') return 'spectrum';if(currentColor==='Jmol') return 'Jmol';
+  if(currentColor==='orangeCarbon') return 'orangeCarbon';
+  if(currentColor==='purple') return {color:'#a855f7'};if(currentColor==='gray') return {color:'#64748b'};
+  if(currentColor==='dark') return {color:'#334155'};return 'spectrum';
+}
+function applyProteinRep(){
+  if(!molModels.protein||!viewer)return;const s=currentReps.protein,c=getColorScheme();
+  if(s==='cartoon') molModels.protein.setStyle({},{cartoon:{color:c},stick:{radius:0.06,opacity:.35,color:c}});
+  else if(s==='sticks') molModels.protein.setStyle({},{stick:{radius:.18,colorscheme:c}});
+  else if(s==='lines') molModels.protein.setStyle({},{line:{color:c}});
+  else if(s==='surface'){molModels.protein.setStyle({},{cartoon:{color:c}});viewer.addSurface($3Dmol.SurfaceType.VDW,{opacity:.6,color:c},{model:molModels.protein});}
+  else if(s==='spheres') molModels.protein.setStyle({},{sphere:{radius:.5,colorscheme:c}});
+}
+function applyLigandRep(){
+  if(!molModels.ligand||!viewer)return;const s=currentReps.ligand,c=getColorScheme();
+  if(s==='sticks') molModels.ligand.setStyle({},{stick:{radius:.25,colorscheme:c},sphere:{scale:.25}});
+  else if(s==='lines') molModels.ligand.setStyle({},{line:{color:c}});
+  else if(s==='spheres') molModels.ligand.setStyle({},{sphere:{radius:.5,colorscheme:c}});
+  else if(s==='ballstick') molModels.ligand.setStyle({},{stick:{radius:.18,colorscheme:c},sphere:{scale:.38}});
+}
+function applyReps(){if(!viewer)return;viewer.removeAllSurfaces();applyProteinRep();applyLigandRep();viewer.render();}
+function setColor(name){
+  currentColor=name;
+  document.querySelectorAll('.color-swatch').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.color-swatch')[['spectrum','Jmol','orangeCarbon','purple','gray','dark'].indexOf(name)].classList.add('active');
+  applyReps();
+}
+function setBg(color){
+  currentBg=color;
+  document.querySelectorAll('[data-bg]').forEach(b=>b.classList.toggle('active',b.dataset.bg===color));
+  if(viewer){viewer.setBackgroundColor(color);viewer.render();}
+}
+function toggleLabels(){
+  showLabels=!showLabels;if(!viewer)return;
+  if(showLabels){const atoms=viewer.selectedAtoms();atoms.forEach(a=>{if(a.atom&&a.atom!=='H')viewer.addLabel(a.atom,{position:a,backgroundColor:'rgba(255,255,255,.85)',fontColor:'#172033',fontSize:10,showBackground:true,backgroundOpacity:.85,alignment:'center'});});}
+  else viewer.removeAllLabels();viewer.render();
+}
+function resetView(){if(viewer){viewer.zoomTo();viewer.render();}}
+function takeScreenshot(){if(!viewer)return;viewer.pngURI(function(uri){const a=document.createElement('a');a.href=uri;a.download='sunnovo_mol_'+(+new Date)+'.png';a.click();});}
+function update2D(){
+  const canvas=document.getElementById('mol2dCanvas'),ctx=canvas.getContext('2d');
+  const rect=canvas.parentElement.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;ctx.scale(dpr,dpr);
+  const w=rect.width,h=rect.height;ctx.clearRect(0,0,w,h);
+  const smiles=document.getElementById('smilesInput').value.trim();
+  if(!smiles){ctx.fillStyle='#8b99ad';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('2D预览',w/2,h/2);return;}
+  ctx.fillStyle='rgba(16,183,165,.06)';ctx.strokeStyle='rgba(16,183,165,.06)';
+  let hexR=Math.min(w,h)/12;for(let r=-1;r<Math.ceil(h/hexR/2)+1;r++)for(let c=0;c<Math.ceil(w/hexR/1.73);c++){
+    let cx=c*hexR*1.73+(r%2)*hexR*.865,cy=r*hexR*1.5;ctx.beginPath();for(let i=0;i<6;i++){let a=Math.PI/3*i-Math.PI/6,px=cx+hexR*Math.cos(a),py=cy+hexR*Math.sin(a);i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);}ctx.closePath();ctx.stroke();
+  }
+  ctx.fillStyle='#075d80';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+  ctx.fillText(smiles.length>25?smiles.slice(0,22)+'...':smiles,w/2,24);
+}
+const dropZone=document.getElementById('dropZone');
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');if(e.dataTransfer.files.length)handleFiles(e.dataTransfer.files);});
+function handleFiles(files){
+  Array.from(files).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const data=e.target.result,name=file.name.toLowerCase();
+      document.getElementById('molName').textContent=file.name;
+      if(name.endsWith('.pdb')||name.endsWith('.pdbqt')) loadPDB(data,name.includes('ligand')?'ligand':'protein');
+      else if(name.endsWith('.mol2')) loadMOL2(data);
+      else if(name.endsWith('.sdf')||name.endsWith('.mol')) loadSDF(data,'ligand','sdf');
+      else if(name.endsWith('.xyz')) loadSDF(data,'ligand','xyz');
+      else if(name.endsWith('.smi')||name.endsWith('.txt')){document.getElementById('smilesInput').value=data.trim();loadFromSMILES();}
+      else setStatus('不支持: '+file.name);
+    };reader.readAsText(file);
+  });
+}
+const MOL_LIB={'对乙酰氨基酚':{smi:'CC(=O)Nc1ccc(O)cc1',pdb:`HETATM    1  C   UNL     1       1.062  -0.006   0.123  1.00  0.00           C  
+HETATM    2  C   UNL     1       2.529   0.263  -0.092  1.00  0.00           C  
+HETATM    3  O   UNL     1       2.914   0.867  -1.086  1.00  0.00           O  
+HETATM    4  N   UNL     1       3.313  -0.239   0.934  1.00  0.00           N  
+HETATM    5  C   UNL     1       4.715  -0.138   1.048  1.00  0.00           C  
+HETATM    6  C   UNL     1       5.496   0.700   0.248  1.00  0.00           C  
+HETATM    7  C   UNL     1       6.888   0.723   0.383  1.00  0.00           C  
+HETATM    8  C   UNL     1       7.499  -0.095   1.325  1.00  0.00           C  
+HETATM    9  O   UNL     1       8.854  -0.123   1.467  1.00  0.00           O  
+HETATM   10  C   UNL     1       6.739  -0.915   2.149  1.00  0.00           C  
+HETATM   11  C   UNL     1       5.346  -0.930   2.018  1.00  0.00           C  
+END`},
+'布洛芬':{smi:'CC(C)Cc1ccc(C(C)C(=O)O)cc1',pdb:`HETATM    1  C   UNL     1       2.745  -1.237   3.647  1.00  0.00           C  
+HETATM    2  C   UNL     1       2.271  -1.610   2.241  1.00  0.00           C  
+HETATM    3  C   UNL     1       0.747  -1.489   2.160  1.00  0.00           C  
+HETATM    4  C   UNL     1       2.928  -0.731   1.156  1.00  0.00           C  
+HETATM    5  C   UNL     1       4.437  -0.830   1.093  1.00  0.00           C  
+HETATM    6  C   UNL     1       5.075  -2.047   0.826  1.00  0.00           C  
+HETATM    7  C   UNL     1       6.470  -2.125   0.774  1.00  0.00           C  
+HETATM    8  C   UNL     1       7.261  -0.985   0.978  1.00  0.00           C  
+HETATM    9  C   UNL     1       8.777  -1.089   0.885  1.00  0.00           C  
+HETATM   10  C   UNL     1       9.239  -0.856  -0.554  1.00  0.00           C  
+HETATM   11  C   UNL     1       9.520  -0.165   1.851  1.00  0.00           C  
+HETATM   12  O   UNL     1      10.349   0.674   1.530  1.00  0.00           O  
+HETATM   13  O   UNL     1       9.198  -0.380   3.152  1.00  0.00           O  
+HETATM   14  C   UNL     1       6.619   0.238   1.212  1.00  0.00           C  
+HETATM   15  C   UNL     1       5.224   0.312   1.279  1.00  0.00           C  
+END`},
+'阿司匹林':{smi:'CC(=O)Oc1ccccc1C(=O)O',pdb:`HETATM    1  C   UNL     1       0.879  -0.266   1.008  1.00  0.00           C  
+HETATM    2  C   UNL     1       2.326  -0.087   1.355  1.00  0.00           C  
+HETATM    3  O   UNL     1       2.734   0.692   2.204  1.00  0.00           O  
+HETATM    4  O   UNL     1       3.100  -0.951   0.570  1.00  0.00           O  
+HETATM    5  C   UNL     1       4.506  -0.968   0.722  1.00  0.00           C  
+HETATM    6  C   UNL     1       5.224   0.226   0.867  1.00  0.00           C  
+HETATM    7  C   UNL     1       6.609   0.190   1.029  1.00  0.00           C  
+HETATM    8  C   UNL     1       7.285  -1.027   1.016  1.00  0.00           C  
+HETATM    9  C   UNL     1       6.577  -2.216   0.829  1.00  0.00           C  
+HETATM   10  C   UNL     1       5.183  -2.196   0.666  1.00  0.00           C  
+HETATM   11  C   UNL     1       4.516  -3.507   0.455  1.00  0.00           C  
+HETATM   12  O   UNL     1       4.945  -4.548   0.922  1.00  0.00           O  
+HETATM   13  O   UNL     1       3.448  -3.458  -0.370  1.00  0.00           O  
+END`},
+'瑞德西韦(Remdesivir)':{smi:'CCC(CC)COC(=O)C(C)NP(=O)(OCC1C(C(C(O1)(C#N)C2=CC=C3N2N=CN=C3N)O)O)OC4=CC=CC=C4',pdb:`HETATM    1  C   UNL     1       2.198  -3.072  -5.214  1.00  0.00           C  
+HETATM    2  C   UNL     1       3.551  -2.374  -5.245  1.00  0.00           C  
+HETATM    3  C   UNL     1       4.618  -3.105  -6.084  1.00  0.00           C  
+HETATM    4  C   UNL     1       4.220  -3.353  -7.556  1.00  0.00           C  
+HETATM    5  C   UNL     1       4.006  -2.101  -8.397  1.00  0.00           C  
+HETATM    6  C   UNL     1       5.963  -2.361  -6.021  1.00  0.00           C  
+HETATM    7  O   UNL     1       6.500  -2.185  -4.701  1.00  0.00           O  
+HETATM    8  C   UNL     1       7.066  -3.275  -4.116  1.00  0.00           C  
+HETATM    9  O   UNL     1       6.864  -4.436  -4.448  1.00  0.00           O  
+HETATM   10  C   UNL     1       8.146  -2.861  -3.112  1.00  0.00           C  
+HETATM   11  C   UNL     1       7.760  -1.615  -2.321  1.00  0.00           C  
+HETATM   12  N   UNL     1       8.452  -3.980  -2.190  1.00  0.00           N  
+HETATM   13  P   UNL     1       9.046  -5.454  -2.993  1.00  0.00           P  
+HETATM   14  O   UNL     1      10.310  -4.671  -3.390  1.00  0.00           O  
+HETATM   15  O   UNL     1       9.405  -6.132  -1.530  1.00  0.00           O  
+HETATM   16  C   UNL     1       8.426  -6.219  -0.515  1.00  0.00           C  
+HETATM   17  C   UNL     1       7.258  -7.123  -0.864  1.00  0.00           C  
+HETATM   18  C   UNL     1       7.659  -8.575  -1.122  1.00  0.00           C  
+HETATM   19  C   UNL     1       6.826  -9.005  -2.331  1.00  0.00           C  
+HETATM   20  C   UNL     1       5.869  -7.830  -2.605  1.00  0.00           C  
+HETATM   21  O   UNL     1       6.486  -6.669  -1.983  1.00  0.00           O  
+HETATM   22  C   UNL     1       5.813  -7.616  -4.091  1.00  0.00           C  
+HETATM   23  N   UNL     1       5.747  -7.474  -5.238  1.00  0.00           N  
+HETATM   24  C   UNL     1       4.447  -7.985  -2.051  1.00  0.00           C  
+HETATM   25  C   UNL     1       3.243  -7.934  -2.759  1.00  0.00           C  
+HETATM   26  C   UNL     1       2.177  -8.145  -1.859  1.00  0.00           C  
+HETATM   27  C   UNL     1       2.737  -8.298  -0.619  1.00  0.00           C  
+HETATM   28  N   UNL     1       4.096  -8.264  -0.738  1.00  0.00           N  
+HETATM   29  N   UNL     1       4.917  -8.476   0.316  1.00  0.00           N  
+HETATM   30  C   UNL     1       4.311  -8.620   1.458  1.00  0.00           C  
+HETATM   31  N   UNL     1       2.966  -8.641   1.686  1.00  0.00           N  
+HETATM   32  C   UNL     1       2.166  -8.477   0.680  1.00  0.00           C  
+HETATM   33  N   UNL     1       0.824  -8.513   0.916  1.00  0.00           N  
+HETATM   34  O   UNL     1       6.197 -10.274  -2.184  1.00  0.00           O  
+HETATM   35  O   UNL     1       7.413  -9.407   0.013  1.00  0.00           O  
+HETATM   36  O   UNL     1       9.622  -6.886  -3.773  1.00  0.00           O  
+HETATM   37  C   UNL     1       9.574  -7.026  -5.139  1.00  0.00           C  
+HETATM   38  C   UNL     1       9.081  -6.060  -6.014  1.00  0.00           C  
+HETATM   39  C   UNL     1       9.024  -6.308  -7.388  1.00  0.00           C  
+HETATM   40  C   UNL     1       9.495  -7.512  -7.901  1.00  0.00           C  
+HETATM   41  C   UNL     1      10.028  -8.467  -7.036  1.00  0.00           C  
+HETATM   42  C   UNL     1      10.062  -8.226  -5.659  1.00  0.00           C  
+END`},
+'苯 (Benzene)':{smi:'c1ccccc1',pdb:`HETATM    1  C   UNL     1       1.383  -0.222   0.006  1.00  0.00           C  
+HETATM    2  C   UNL     1       0.507  -1.307  -0.007  1.00  0.00           C  
+HETATM    3  C   UNL     1      -0.871  -1.091  -0.015  1.00  0.00           C  
+HETATM    4  C   UNL     1      -1.373   0.211  -0.004  1.00  0.00           C  
+HETATM    5  C   UNL     1      -0.497   1.296   0.011  1.00  0.00           C  
+HETATM    6  C   UNL     1       0.881   1.080   0.013  1.00  0.00           C  
+END`},
+'咖啡因 (Caffeine)':{smi:'CN1C=NC2=C1C(=O)N(C(=O)N2C)C',pdb:`HETATM    1  C   UNL     1      -3.246  -1.134   0.032  1.00  0.00           C  
+HETATM    2  N   UNL     1      -2.266  -0.079   0.005  1.00  0.00           N  
+HETATM    3  C   UNL     1      -2.522   1.267  -0.006  1.00  0.00           C  
+HETATM    4  N   UNL     1      -1.408   1.973  -0.009  1.00  0.00           N  
+HETATM    5  C   UNL     1      -0.414   1.041  -0.003  1.00  0.00           C  
+HETATM    6  C   UNL     1      -0.908  -0.228   0.000  1.00  0.00           C  
+HETATM    7  C   UNL     1      -0.085  -1.385   0.006  1.00  0.00           C  
+HETATM    8  O   UNL     1      -0.542  -2.525   0.007  1.00  0.00           O  
+HETATM    9  N   UNL     1       1.278  -1.079   0.009  1.00  0.00           N  
+HETATM   10  C   UNL     1       1.830   0.219   0.007  1.00  0.00           C  
+HETATM   11  O   UNL     1       3.053   0.388   0.008  1.00  0.00           O  
+HETATM   12  N   UNL     1       0.937   1.292   0.003  1.00  0.00           N  
+HETATM   13  C   UNL     1       1.427   2.658   0.009  1.00  0.00           C  
+HETATM   14  C   UNL     1       2.224  -2.177   0.021  1.00  0.00           C  
+END`},
+'阿托伐他汀 (Atorvastatin)':{smi:'CC(C)c1c(C(=O)NCc2ccc(F)cc2)c(c2ccc(F)cc2)n(c2ccccc2)c1C(=O)NCC(O)CC(O)CC(=O)O',pdb:`HETATM    1  C   UNL     1       3.515  -0.557  -0.727  1.00  0.00           C  
+HETATM    2  C   UNL     1       2.446   0.337  -0.093  1.00  0.00           C  
+HETATM    3  C   UNL     1       1.052  -0.301   0.010  1.00  0.00           C  
+HETATM    4  C   UNL     1       2.898   1.012   1.204  1.00  0.00           C  
+HETATM    5  C   UNL     1       3.548   0.393   2.359  1.00  0.00           C  
+HETATM    6  C   UNL     1       3.894  -1.037   2.599  1.00  0.00           C  
+HETATM    7  O   UNL     1       4.961  -1.401   3.077  1.00  0.00           O  
+HETATM    8  N   UNL     1       2.976  -1.990   2.240  1.00  0.00           N  
+HETATM    9  C   UNL     1       3.197  -3.396   2.502  1.00  0.00           C  
+HETATM   10  C   UNL     1       2.003  -4.021   3.181  1.00  0.00           C  
+HETATM   11  C   UNL     1       1.330  -5.104   2.596  1.00  0.00           C  
+HETATM   12  C   UNL     1       0.257  -5.707   3.256  1.00  0.00           C  
+HETATM   13  C   UNL     1      -0.142  -5.229   4.496  1.00  0.00           C  
+HETATM   14  F   UNL     1      -1.166  -5.817   5.133  1.00  0.00           F  
+HETATM   15  C   UNL     1       0.509  -4.157   5.096  1.00  0.00           C  
+HETATM   16  C   UNL     1       1.583  -3.554   4.440  1.00  0.00           C  
+HETATM   17  C   UNL     1       3.888   1.441   3.250  1.00  0.00           C  
+HETATM   18  C   UNL     1       4.456   1.317   4.638  1.00  0.00           C  
+HETATM   19  C   UNL     1       5.586   0.525   4.898  1.00  0.00           C  
+HETATM   20  C   UNL     1       6.052   0.296   6.198  1.00  0.00           C  
+HETATM   21  C   UNL     1       5.489   0.992   7.250  1.00  0.00           C  
+HETATM   22  F   UNL     1       5.972   0.829   8.488  1.00  0.00           F  
+HETATM   23  C   UNL     1       4.443   1.873   7.025  1.00  0.00           C  
+HETATM   24  C   UNL     1       3.890   1.984   5.740  1.00  0.00           C  
+HETATM   25  N   UNL     1       3.474   2.662   2.659  1.00  0.00           N  
+HETATM   26  C   UNL     1       3.594   3.972   3.268  1.00  0.00           C  
+HETATM   27  C   UNL     1       4.729   4.314   4.021  1.00  0.00           C  
+HETATM   28  C   UNL     1       4.756   5.493   4.775  1.00  0.00           C  
+HETATM   29  C   UNL     1       3.682   6.378   4.729  1.00  0.00           C  
+HETATM   30  C   UNL     1       2.585   6.088   3.921  1.00  0.00           C  
+HETATM   31  C   UNL     1       2.533   4.887   3.200  1.00  0.00           C  
+HETATM   32  C   UNL     1       2.878   2.405   1.410  1.00  0.00           C  
+HETATM   33  C   UNL     1       2.517   3.467   0.448  1.00  0.00           C  
+HETATM   34  O   UNL     1       3.182   4.491   0.307  1.00  0.00           O  
+HETATM   35  N   UNL     1       1.374   3.270  -0.308  1.00  0.00           N  
+HETATM   36  C   UNL     1       0.880   4.241  -1.290  1.00  0.00           C  
+HETATM   37  C   UNL     1       0.363   3.560  -2.581  1.00  0.00           C  
+HETATM   38  O   UNL     1      -0.681   2.630  -2.226  1.00  0.00           O  
+HETATM   39  C   UNL     1      -0.211   4.523  -3.646  1.00  0.00           C  
+HETATM   40  C   UNL     1       0.782   5.554  -4.203  1.00  0.00           C  
+HETATM   41  O   UNL     1       1.894   4.859  -4.775  1.00  0.00           O  
+HETATM   42  C   UNL     1       0.201   6.469  -5.290  1.00  0.00           C  
+HETATM   43  C   UNL     1      -0.874   7.393  -4.783  1.00  0.00           C  
+HETATM   44  O   UNL     1      -1.280   7.436  -3.637  1.00  0.00           O  
+HETATM   45  O   UNL     1      -1.365   8.200  -5.754  1.00  0.00           O  
+END`},
+'奥希替尼 (Osimertinib)':{smi:'CN(C)C(=O)Cc1c2cc(Nc3ncnc4cc(C)ccc34)c(N)nc2n(c1C)C',pdb:`HETATM    1  C   UNL     1       7.033  -1.253   1.154  1.00  0.00           C  
+HETATM    2  N   UNL     1       6.091  -0.859   0.119  1.00  0.00           N  
+HETATM    3  C   UNL     1       5.794  -1.813  -0.936  1.00  0.00           C  
+HETATM    4  C   UNL     1       5.627   0.456   0.144  1.00  0.00           C  
+HETATM    5  O   UNL     1       5.928   1.216   1.069  1.00  0.00           O  
+HETATM    6  C   UNL     1       4.686   0.906  -0.972  1.00  0.00           C  
+HETATM    7  C   UNL     1       5.139   2.166  -1.652  1.00  0.00           C  
+HETATM    8  C   UNL     1       5.968   2.262  -2.819  1.00  0.00           C  
+HETATM    9  C   UNL     1       6.640   1.350  -3.661  1.00  0.00           C  
+HETATM   10  C   UNL     1       7.378   1.840  -4.745  1.00  0.00           C  
+HETATM   11  N   UNL     1       8.143   1.003  -5.606  1.00  0.00           N  
+HETATM   12  C   UNL     1       7.879  -0.315  -6.051  1.00  0.00           C  
+HETATM   13  N   UNL     1       6.730  -0.915  -5.678  1.00  0.00           N  
+HETATM   14  C   UNL     1       6.528  -2.163  -6.103  1.00  0.00           C  
+HETATM   15  N   UNL     1       7.354  -2.883  -6.867  1.00  0.00           N  
+HETATM   16  C   UNL     1       8.498  -2.301  -7.223  1.00  0.00           C  
+HETATM   17  C   UNL     1       9.388  -3.046  -7.991  1.00  0.00           C  
+HETATM   18  C   UNL     1      10.632  -2.548  -8.394  1.00  0.00           C  
+HETATM   19  C   UNL     1      11.596  -3.413  -9.152  1.00  0.00           C  
+HETATM   20  C   UNL     1      10.977  -1.247  -8.033  1.00  0.00           C  
+HETATM   21  C   UNL     1      10.093  -0.476  -7.269  1.00  0.00           C  
+HETATM   22  C   UNL     1       8.841  -0.994  -6.843  1.00  0.00           C  
+HETATM   23  C   UNL     1       7.416   3.244  -4.920  1.00  0.00           C  
+HETATM   24  N   UNL     1       8.157   3.793  -5.990  1.00  0.00           N  
+HETATM   25  N   UNL     1       6.784   4.153  -4.149  1.00  0.00           N  
+HETATM   26  C   UNL     1       6.086   3.614  -3.128  1.00  0.00           C  
+HETATM   27  N   UNL     1       5.352   4.321  -2.206  1.00  0.00           N  
+HETATM   28  C   UNL     1       4.806   3.464  -1.272  1.00  0.00           C  
+HETATM   29  C   UNL     1       4.021   3.918  -0.087  1.00  0.00           C  
+HETATM   30  C   UNL     1       5.162   5.754  -2.235  1.00  0.00           C  
+END`}};
+
+  
+function buildLibrary(){
+  const c=document.getElementById('libChips');c.innerHTML='';
+  Object.keys(MOL_LIB).forEach(function(n){
+    const b=document.createElement('button');b.className='lib-chip';b.textContent=n;
+    b.onclick=function(){loadLibMolecule(n);};c.appendChild(b);
+  });
+}
+function loadLibMolecule(name){
+  const m=MOL_LIB[name];if(!m)return;
+  document.getElementById('smilesInput').value=m.smi;
+  document.getElementById('molName').textContent=name;
+  loadMolecule(m.pdb);setStatus('已加载: '+name);
+}
+function setStatus(msg){document.getElementById('statusText').textContent=msg;}
+var sketchCanvas,sketchCtx,sketchAtoms=[],sketchBonds=[],sketchDragAtom=null,sketchNextId=0;
+var currentAtom='C',currentBond=1,sketchMode='atom';
+document.querySelectorAll('#sketchAtoms .sketch-btn').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('#sketchAtoms .sketch-btn').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active');currentAtom=b.dataset.atom;sketchMode='atom';
+  });
+});
+document.querySelectorAll('[data-bond]').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('[data-bond]').forEach(function(x){x.classList.remove('active');});
+    b.classList.add('active');currentBond=parseInt(b.dataset.bond);sketchMode='bond';
+  });
+});
+function initSketchCanvas(){
+  sketchCanvas=document.getElementById('sketcherCanvas');
+  if(!sketchCanvas) return;
+  const container=document.getElementById('panel-sketch');
+  const w=Math.min((container.clientWidth||600)-32,600);
+  sketchCanvas.width=w;sketchCanvas.height=200;
+  sketchCtx=sketchCanvas.getContext('2d');
+  sketchCanvas.onclick=function(e){
+    const rect=this.getBoundingClientRect();
+    const x=e.clientX-rect.left,y=e.clientY-rect.top;
+    if(sketchMode==='atom'){
+      sketchAtoms.push({id:sketchNextId++,x:x,y:y,elem:currentAtom});renderSketch();
+    }else{
+      var nearest=-1,minDist=30;
+      sketchAtoms.forEach(function(a,i){const d=Math.hypot(a.x-x,a.y-y);if(d<minDist){minDist=d;nearest=i;}});
+      if(nearest>=0){
+        if(sketchDragAtom===null) sketchDragAtom=nearest;
+        else{if(sketchDragAtom!==nearest) sketchBonds.push({a1:sketchDragAtom,a2:nearest,order:currentBond});sketchDragAtom=null;}
+      }else sketchDragAtom=null;
+      renderSketch();
+    }
+  };
+  renderSketch();
+}
+
+function renderSketch(){
+  if(!sketchCtx)return;const w=sketchCanvas.width,h=sketchCanvas.height;
+  sketchCtx.clearRect(0,0,w,h);
+  sketchCtx.fillStyle='#fafbfc';sketchCtx.fillRect(0,0,w,h);
+  sketchCtx.strokeStyle='#f0f2f5';sketchCtx.lineWidth=1;
+  for(let x=0;x<w;x+=20){sketchCtx.beginPath();sketchCtx.moveTo(x,0);sketchCtx.lineTo(x,h);sketchCtx.stroke();}
+  for(let y=0;y<h;y+=20){sketchCtx.beginPath();sketchCtx.moveTo(0,y);sketchCtx.lineTo(w,y);sketchCtx.stroke();}
+  const ELEM_COLORS={'C':'#333','N':'#3050f8','O':'#ff0d0d','S':'#ffff30','F':'#90e050','Cl':'#1ff01f','Br':'#a62929','P':'#ff8000'};
+  sketchBonds.forEach(b=>{
+    const a1=sketchAtoms[b.a1],a2=sketchAtoms[b.a2];if(!a1||!a2)return;
+    sketchCtx.strokeStyle='#172033';sketchCtx.lineWidth=2.5;
+    if(b.order===2){
+      const dx=a2.x-a1.x,dy=a2.y-a1.y,len=Math.hypot(dx,dy)||1,nx=-dy/len*3,ny=dx/len*3;
+      sketchCtx.beginPath();sketchCtx.moveTo(a1.x+nx,a1.y+ny);sketchCtx.lineTo(a2.x+nx,a2.y+ny);sketchCtx.stroke();
+      sketchCtx.beginPath();sketchCtx.moveTo(a1.x-nx,a1.y-ny);sketchCtx.lineTo(a2.x-nx,a2.y-ny);sketchCtx.stroke();
+    }else if(b.order===3){
+      const dx=a2.x-a1.x,dy=a2.y-a1.y,len=Math.hypot(dx,dy)||1,nx=-dy/len*4,ny=dx/len*4;
+      sketchCtx.beginPath();sketchCtx.moveTo(a1.x,a1.y);sketchCtx.lineTo(a2.x,a2.y);sketchCtx.stroke();
+      sketchCtx.beginPath();sketchCtx.moveTo(a1.x+nx,a1.y+ny);sketchCtx.lineTo(a2.x+nx,a2.y+ny);sketchCtx.stroke();
+      sketchCtx.beginPath();sketchCtx.moveTo(a1.x-nx,a1.y-ny);sketchCtx.lineTo(a2.x-nx,a2.y-ny);sketchCtx.stroke();
+    }else{sketchCtx.beginPath();sketchCtx.moveTo(a1.x,a1.y);sketchCtx.lineTo(a2.x,a2.y);sketchCtx.stroke();}
+  });
+  if(sketchDragAtom!==null&&sketchMode==='bond'){
+    const a=sketchAtoms[sketchDragAtom];if(a){sketchCtx.beginPath();sketchCtx.arc(a.x,a.y,16,0,Math.PI*2);sketchCtx.fillStyle='rgba(16,183,165,.15)';sketchCtx.fill();}
+  }
+  sketchAtoms.forEach(a=>{
+    sketchCtx.beginPath();sketchCtx.arc(a.x,a.y,12,0,Math.PI*2);
+    sketchCtx.fillStyle=ELEM_COLORS[a.elem]||'#888';sketchCtx.fill();
+    sketchCtx.strokeStyle='rgba(0,0,0,.2)';sketchCtx.lineWidth=1;sketchCtx.stroke();
+    sketchCtx.fillStyle='#fff';sketchCtx.font='bold 11px sans-serif';sketchCtx.textAlign='center';sketchCtx.textBaseline='middle';
+    sketchCtx.fillText(a.elem,a.x,a.y);
+  });
+  const smi=estimateSMILES();document.getElementById('sketchSmiles').textContent=smi?'SMILES: '+smi:'';
+}
+function estimateSMILES(){
+  if(!sketchAtoms.length)return'';
+  const adj={};sketchBonds.forEach(b=>{
+    if(!adj[b.a1])adj[b.a1]=[];if(!adj[b.a2])adj[b.a2]=[];
+    adj[b.a1].push({to:b.a2,order:b.order});adj[b.a2].push({to:b.a1,order:b.order});
+  });
+  let visited=new Set(),parts=[];
+  function dfs(idx){
+    if(visited.has(idx))return;visited.add(idx);
+    const a=sketchAtoms.find(x=>x.id===idx);if(a)parts.push(a.elem);
+    (adj[idx]||[]).forEach(n=>{if(!visited.has(n.to)){parts.push(n.order===2?'=':n.order===3?'#':'');dfs(n.to);}});
+  }
+  if(sketchAtoms.length){let start=sketchAtoms[0].id;dfs(start);}
+  return parts.join('');
+}
+function clearSketch(){sketchAtoms=[];sketchBonds=[];sketchDragAtom=null;sketchNextId=0;renderSketch();document.getElementById('sketchSmiles').textContent='';}
+function addRing(type){
+  const cx=(sketchCanvas?sketchCanvas.width:300)/2,cy=100,r=35;
+  const n=type==='benzene'||type==='cyclohexane'||type==='pyridine'?6:5;
+  const atoms=[];
+  for(let i=0;i<n;i++){
+    const angle=-Math.PI/2+(2*Math.PI*i)/n;
+    atoms.push({id:sketchNextId++,x:cx+r*Math.cos(angle),y:cy+r*Math.sin(angle),elem:type==='pyridine'&&i===2?'N':'C'});
+  }
+  const base=sketchAtoms.length;atoms.forEach(a=>sketchAtoms.push(a));
+  for(let i=0;i<n;i++)sketchBonds.push({a1:base+i,a2:base+((i+1)%n),order:(type==='benzene'||type==='pyridine')&&i%2===0?2:1});
+  renderSketch();
+}
+function loadFromSketch(){
+  const smi=estimateSMILES();if(!smi){setStatus('画板为空');return;}
+  document.getElementById('smilesInput').value=smi;
+  switchPanel('input');
+  loadFromSMILES();
+}
+document.addEventListener('DOMContentLoaded',function(){
+  initViewer();initSketchCanvas();buildLibrary();
+  setTimeout(function(){loadLibMolecule('对乙酰氨基酚');},200);
+});
+</script></body></html>
