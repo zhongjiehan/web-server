@@ -205,11 +205,11 @@
     .soft-box:hover{transform:translateY(-2px);border-color:rgba(16,183,165,.28);box-shadow:0 12px 26px rgba(26,48,78,.075);}
     .soft-box strong{display:block;font-size:14px;margin-bottom:4px;color:var(--brand);}
     .soft-box span{font-size:12px;color:var(--muted);}
-    .mini-tool-card{grid-column:span 4;padding:24px;min-height:242px;}
+    .mini-tool-card{padding:18px;min-height:180px;}
     .feedback-card{grid-column:span 4;padding:24px;min-height:242px;}
-    .tool-hero{display:grid;grid-template-columns:76px 1fr;gap:18px;align-items:start;}
-    .tool-icon{width:76px;height:76px;border-radius:24px;background:linear-gradient(135deg,rgba(7,93,128,.12),rgba(16,183,165,.18));border:1px solid rgba(16,183,165,.22);display:flex;align-items:center;justify-content:center;box-shadow:0 14px 34px rgba(7,93,128,.10);color:var(--brand);}
-    .tool-icon svg{width:38px;height:38px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .tool-hero{display:grid;grid-template-columns:56px 1fr;gap:14px;align-items:start;}
+    .tool-icon{width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,rgba(7,93,128,.12),rgba(16,183,165,.18));border:1px solid rgba(16,183,165,.22);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(7,93,128,.08);color:var(--brand);}
+    .tool-icon svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
     .tool-desc{color:var(--muted);font-size:13px;margin-top:8px;max-width:760px;}
     .tool-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
     .tool-meta span{font-size:11px;font-weight:850;color:#5e7188;background:rgba(244,247,250,.86);border:1px solid rgba(213,226,240,.9);border-radius:999px;padding:4px 10px;}
@@ -503,6 +503,7 @@
           <div class="tagbar"><span class="chip teal">流程提效</span><span class="chip">序列处理</span><span class="chip">需求反馈</span><span class="chip">持续迭代</span></div>
         </div>
         <div class="grid">
+          <div style="grid-column:span 8;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-content:start;">
           <article class="card mini-tool-card searchable" data-search="研发小程序 小工具 修饰序列 位点高亮 序列比对 siRNA ASO ss as 专利 修饰 Excel Word bug 需求反馈">
             <div class="tool-hero">
               <div class="tool-icon"><svg viewBox="0 0 24 24"><path d="M6 4h12v5H6z"/><path d="M6 15h12v5H6z"/><path d="M8 9v6M16 9v6"/><path d="M10 6h.01M14 6h.01M10 17h.01M14 17h.01"/></svg></div>
@@ -527,6 +528,20 @@
               </div>
             </div>
           </article>
+          <article class="card mini-tool-card searchable" data-search="研发小程序 siRNA ASO 修饰序列 智慧芽 比对 碱基编辑 位点高亮 序列差异 可视化">
+            <div class="tool-hero">
+              <div class="tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h18"/><path d="M7 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/><path d="M2 17h18"/><path d="M22 11v6"/></svg></div>
+              <div>
+                <div class="section-kicker">Available Tool</div>
+                <h3>siRNA修饰比对可视化工具</h3>
+                <p class="tool-desc">用于siRNA序列的修饰位点比对和可视化展示，支持智慧芽（PatSnap）数据导入。自动识别序列差异、修饰模式，并生成直观的可视化比对图。</p>
+                <div class="tool-meta"><span>siRNA序列比对</span><span>修饰位点标注</span><span>智慧芽数据</span><span>可视化展示</span></div>
+                <div class="tool-actions"><a class="btn solid" href="sirna_sequence_aligner.html" target="_blank" rel="noopener">打开siRNA比对工具 →</a></div>
+              </div>
+            </div>
+          </article>
+          </div>
+          <div style="grid-column:span 4;">
           <article class="card feedback-card searchable" data-search="小程序需求 留言 提交 反馈 bug 改进 工作流程 自动化 工具开发 软件优化">
             <div class="section-kicker">Request & Feedback</div>
             <h3>小程序需求与问题反馈</h3>
@@ -536,6 +551,7 @@
             <div class="feedback-note">当前为静态网页版本：点击提交后会生成邮件草稿，同时在本机浏览器保留一份记录。后续可接入公司数据库或后端表单，实现统一收集和流转。</div>
             <div class="feedback-status" id="toolFeedbackStatus"></div>
           </article>
+          </div>
         </div>
       </section>
 

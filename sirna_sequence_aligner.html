@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>siRNA 修饰可视化 V3</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: "Microsoft YaHei",Arial,sans-serif; margin: 24px; color:#1f2937; background:#f8fafc; }
+    h1 { margin:0 0 4px; font-size:24px; }
+    .subtitle { color:#64748b; margin-bottom:16px; font-size:13px; }
+    .hint { color:#475569; margin-bottom:16px; line-height:1.7; font-size:13px; background:#f1f5f9; padding:10px 14px; border-radius:8px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    label { font-weight:700; display:block; margin-bottom:6px; }
+    textarea { width:100%; box-sizing:border-box; font-family:Consolas,"Courier New",monospace; font-size:15px; padding:10px; border:1px solid #cbd5e1; border-radius:8px; background:white; }
+    .seq-input { min-height:80px; resize:vertical; }
+    .batch-input { min-height:180px; resize:vertical; }
+    button { margin:10px 6px 10px 0; padding:9px 14px; border:0; border-radius:8px; background:#2563eb; color:white; font-weight:700; cursor:pointer; font-size:13px; }
+    button.secondary { background:#475569; }
+    .section-border { border:2px solid #dbeafe; border-radius:12px; padding:16px; margin-bottom:20px; background:white; }
+    .section-border h2 { margin:0 0 8px; font-size:18px; color:#1e40af; }
+    .section-border.warn { border-color:#fef3c7; }
+    .section-border.warn h2 { color:#92400e; }
+    .muted { color:#64748b; font-size:13px; }
+    .stats { font-size:12px; color:#64748b; margin:4px 0; }
+    .legend { display:flex; gap:12px; margin:8px 0; font-size:12px; flex-wrap:wrap; }
+    .legend-item { display:flex; align-items:center; gap:4px; white-space:nowrap; }
+    .legend-swatch { display:inline-block; width:14px; height:14px; border-radius:3px; border:1px solid #cbd5e1; }
+    .separator { border-top:1px dashed #e2e8f0; margin:10px 0; }
+    .stats { font-size:12px; color:#64748b; margin:4px 0; }
+    .legend { display:flex; gap:12px; margin:8px 0; font-size:12px; flex-wrap:wrap; }
+    .nt { display:inline-block; font-family:Consolas,"Courier New",monospace; font-size:14px; padding:0 2px; margin:1px; border-radius:3px; line-height:1.6; }
+    .mod-OMe { background:#dbeafe; color:#1e40af; }
+    .mod-F { background:#fce7f3; color:#9d174d; }
+    .mod-DNA { background:#fef3c7; color:#92400e; }
+    .mod-VP { background:#d1fae5; color:#065f46; }
+    .mod-C22 { background:#ede9fe; color:#5b21b6; }
+    .mod-eF { background:#ffe4e6; color:#9f1239; }
+    .mod-RNA { background:#cffafe; color:#0e7490; }
+    .mod-OTHER { background:#f1f5f9; color:#475569; }
+    .mod-LINKER { background:#f8fafc; color:#94a3b8; font-size:13px; }
+    .mod-BACKBONE { background:#f1f5f9; color:#cbd5e1; font-size:12px; }
+    .mod-seq { display:flex; flex-wrap:wrap; align-items:center; gap:2px; padding:6px 8px; border-radius:6px; border:1px solid #e2e8f0; background:white; line-height:2; }
+    .result-block { margin-top:10px; margin-bottom:14px; }
+    .pair-header { font-weight:700; color:#1e293b; font-size:14px; margin-bottom:4px; }
+    .bare-seq { font-family:Consolas,"Courier New",monospace; font-size:13px; color:#64748b; word-break:break-all; }
+    /* 配对视图 */
+    .pair-view { margin-top:10px; padding:6px 8px; border-radius:6px; border:1px solid #e2e8f0; background:#fafbfc; overflow-x:auto; }
+    .pair-row { display:flex; align-items:center; gap:0; white-space:nowrap; }
+    .pair-label { font-size:11px; color:#64748b; min-width:70px; text-align:right; padding-right:6px; flex-shrink:0; }
+    .pair-dots { font-size:12px; color:#94a3b8; letter-spacing:0; line-height:1; }
+    .pair-cell { display:inline-flex; flex-direction:column; align-items:center; min-width:26px; font-size:13px; text-align:center; }
+    .pair-base { font-family:Consolas,"Courier New",monospace; font-weight:700; padding:0 2px; border-radius:2px; }
+    .pair-pos { font-size:9px; color:#94a3b8; line-height:1; }
+    @media (max-width:800px) { .grid { grid-template-columns:1fr; } body { margin:12px; } }
+  </style>
+</head>
+<body>
+
+<h1>🧬 siRNA 修饰可视化 V3</h1>
+<div class="subtitle">查看 siRNA 两条链上每个核苷酸的修饰类型及配对关系</div>
+<div class="hint">
+  <b>用法：</b>粘贴 Sense(可选) 和 Antisense 序列 → 查看每条链的修饰分布及碱基配对对应关系
+</div>
+
+<div class="section-border">
+  <h2>📝 单条查看</h2>
+  <div class="grid">
+    <div>
+      <label for="senseInput">Sense(5'-3') <span class="muted">（可选）</span></label>
+      <textarea id="senseInput" class="seq-input" placeholder="可选"></textarea>
+    </div>
+    <div>
+      <label for="antiInput">Antisense(5'-3') <span style="color:#c00000;">*必填</span></label>
+      <textarea id="antiInput" class="seq-input" placeholder="例如：VPmUfAmAmCmAfUmAmAmUmUmAmUmCfAmUfCmAmUmUmAmGmGmC"></textarea>
+    </div>
+  </div>
+  <div>
+    <button onclick="runSingle()">🔍 查看</button>
+    <button class="secondary" onclick="fillExample()">📋 填入示例</button>
+  </div>
+  <div id="singleResult" style="margin-top:12px;display:none;">
+    <div class="separator"></div>
+    <div id="singleLegend" class="legend"></div>
+    <div id="singleResultArea"></div>
+    <div id="singlePairView"></div>
+  </div>
+</div>
+
+<div class="section-border warn">
+  <h2>📊 批量查看</h2>
+  <label for="batchInput">从 Excel 复制两列（Sense/Antisense），粘贴到这里</label>
+  <textarea id="batchInput" class="batch-input" placeholder="Sense(5'-3')&#9;Antisense(5'-3')"></textarea>
+  <div>
+    <button onclick="runBatch()">📊 批量查看</button>
+    <button class="secondary" onclick="fillBatchExample()">📋 填入批量示例</button>
+  </div>
+  <div id="batchResult" style="margin-top:12px;display:none;">
+    <div class="separator"></div>
+    <div id="batchLegend" class="legend"></div>
+    <div id="batchResultArea"></div>
+  </div>
+</div>
+
+<div class="footer-info">开发 by 创新办公室，韩中杰 | V3</div>
+
+<script>
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c;});}
+function isB(ch){return /[ACGUTIacguti]/.test(ch||"");}
+
+function parseTokens(seq) {
+  var tokens=[]; var i=0; var pos=0;
+  while(i<seq.length){
+    var ch=seq[i];
+    if(/\s/.test(ch)){i++;continue;}
+    // VP
+    if(seq.startsWith("VP",i)){
+      var ve=i+2,vb="";
+      while(ve<seq.length){
+        var vc=seq[ve];if(isB(vc)){vb=vc.toUpperCase();ve++;break;}
+        if("mfder".includes(vc)&&ve+1<seq.length&&isB(seq[ve+1])){vb=seq[ve+1].toUpperCase();ve+=2;break;}
+        ve++;}
+      if(vb){while(ve<seq.length&&"sS".includes(seq[ve]))ve++;tokens.push({base:vb,text:seq.slice(i,ve),mod:"VP",pos:++pos});i=ve;continue;}
+    }
+    // 括号
+    if(ch==="("||ch==="["){var cl=ch==="("?")":"]",j=seq.indexOf(cl,i+1);if(j>-1){var tb=seq.slice(i,j+1),m=tb.match(/[ACGUTacgut]/);if(m){tokens.push({base:m[0].toUpperCase(),text:tb,mod:"C22",pos:++pos});i=j+1;continue;}}}
+    if(ch==="-"){var nx=seq[i+1];if(nx&&nx.match(/[ACGUTacgut]/i)){var nn=seq[i+2];if((nx==='d'||nx==='D')&&nn&&isB(nn)){tokens.push({base:nn.toUpperCase(),text:"-d"+nn+"-",mod:"DNA",pos:++pos});i+=3;continue;}}tokens.push({base:"-",text:"-",mod:"LINKER",pos:0});i++;continue;}
+    // mX fX dX eX rX
+    if((ch==="m"||ch==="f"||ch==="d"||ch==="e"||ch==="r")&&isB(seq[i+1])){
+      var mp=ch,b1=seq[i+1].toUpperCase(),t1=seq.slice(i,i+2),mm={m:"OMe",f:"F",d:"DNA",e:"eF",r:"RNA"},m1=mm[mp]||"OTHER",j1=i+2;
+      while(j1<seq.length&&"sS".includes(seq[j1])){t1+=seq[j1];j1++;}
+      tokens.push({base:b1,text:t1,mod:m1,pos:++pos});i=j1;continue;
+    }
+    // Af
+    if(isB(ch)&&seq[i+1]==="f"){var b3=ch.toUpperCase(),t3=ch+"f",j3=i+2;if(seq[j3]==="s"||seq[j3]==="S"){t3+=seq[j3].toLowerCase();j3++;}tokens.push({base:b3,text:t3,mod:"F",pos:++pos});i=j3;continue;}
+    // s / *
+    if(ch==="s"||ch==="S"||ch==="*"){tokens.push({base:"s",text:ch==="*"?"*":"s",mod:"BACKBONE",pos:0});i++;continue;}
+    // 单碱基
+    if(isB(ch)){var b4=ch.toUpperCase(),m4=ch===ch.toLowerCase()?"OMe":"F",t4=ch,j4=i+1;while(j4<seq.length&&"sS".includes(seq[j4])){t4+=seq[j4];j4++;}tokens.push({base:b4,text:t4,mod:m4,pos:++pos});i=j4;continue;}
+    i++;
+  }
+  return tokens;
+}
+
+function getBases(tokens){var r="";for(var i=0;i<tokens.length;i++){var b=tokens[i].base;if(b&&b!=="-"&&b!=="s"&&b!=="*")r+=b;}return r;}
+
+function analyze(seq){var t=parseTokens(seq),b=getBases(t),s={};for(var i=0;i<t.length;i++){var p=t[i].pos;if(p>0){if(!s[t[i].mod])s[t[i].mod]=0;s[t[i].mod]++;}}return{tokens:t,bases:b,stats:s,seq:seq};}
+
+function renderTokens(tokens){
+  var h='<div class="mod-seq">';
+  for(var i=0;i<tokens.length;i++){var t=tokens[i];h+='<span class="nt mod-'+t.mod+'">'+esc(t.text)+'</span>';}
+  return h+'</div>';
+}
+
+function makeStatStr(stats,total){
+  var parts=[];var order=["VP","OMe","F","DNA","C22","eF","RNA","OTHER"];
+  for(var o=0;o<order.length;o++){var k=order[o];if(stats[k])parts.push(MOD_NAMES[k]+": "+stats[k]+"nt");}
+  for(var k in stats){if(order.indexOf(k)<0)parts.push(MOD_NAMES[k]+": "+stats[k]+"nt");}
+  return parts.join(" &nbsp;|&nbsp; ");
+}
+var MOD_NAMES={OMe:"2'-OMe",F:"2'-F",DNA:"DNA",VP:"VP",C22:"C22",eF:"eF",RNA:"RNA",OTHER:"其他",LINKER:"连接子",BACKBONE:"骨架"};
+
+// ===== 配对视图 =====
+function buildPairView(sTokens, aTokens) {
+  if (!sTokens) return "";
+  var snuc = sTokens.filter(function(t){return t.pos>0;});
+  var anuc = aTokens.filter(function(t){return t.pos>0;});
+  var sCount = snuc.length;
+  var aCount = anuc.length;
+  // 配对：Sense[i] ↔ Anti[pairLen-1-i]（反向）
+  // overhang = aCount - sCount（末尾多出的部分）
+  var pairLen = Math.min(sCount, aCount);
+  
+  var h = '<div class="pair-view"><div style="font-weight:700;font-size:13px;margin-bottom:6px;">🔗 碱基配对对应关系</div><div class="muted" style="margin-bottom:4px;">同一列 = 配对的碱基（Sense#1 ↔ Anti#'+(pairLen)+'）</div>';
+  
+  // Sense行（5'→3'，从左到右）
+  h += '<div class="pair-row"><span class="pair-label">Sense</span>';
+  for (var i=0; i<pairLen; i++) {
+    var t = snuc[i];
+    var pnum = i+1;
+    h += '<div class="pair-cell"><span class="pair-base mod-'+t.mod+'">'+esc(t.base)+'</span><span class="pair-pos">'+pnum+'</span></div>';
+  }
+  h += '</div>';
+  
+  // 配对线
+  h += '<div class="pair-row"><span class="pair-label" style="font-size:10px;">配对</span>';
+  for (var i=0; i<pairLen; i++) {
+    var ai = pairLen - 1 - i;  // Anti反向遍历
+    var sbase = snuc[i].base;
+    var abase = anuc[ai] ? anuc[ai].base : '?';
+    var isPair = (sbase==='A'&&abase==='U')||(sbase==='U'&&abase==='A')||(sbase==='C'&&abase==='G')||(sbase==='G'&&abase==='C')||(sbase==='G'&&abase==='U')||(sbase==='U'&&abase==='G');
+    h += '<div style="min-width:26px;text-align:center;font-size:12px;color:'+(isPair?'#22c55e':'#ef4444')+';">'+(isPair?'⋮':'✗')+'</div>';
+  }
+  h += '</div>';
+  
+  // Anti行（反向显示，因为5'→3'的Anti #1 配 Sense #pairLen）
+  h += '<div class="pair-row"><span class="pair-label">Antisense</span>';
+  for (var i=0; i<pairLen; i++) {
+    var ai = pairLen - 1 - i;
+    var t = anuc[ai];
+    if (!t) { h += '<div class="pair-cell"><span class="pair-base" style="color:#94a3b8;">—</span><span class="pair-pos"></span></div>'; continue; }
+    var pnum = ai+1;
+    h += '<div class="pair-cell"><span class="pair-base mod-'+t.mod+'">'+esc(t.base)+'</span><span class="pair-pos">'+pnum+'</span></div>';
+  }
+  h += '</div>';
+  
+  // overhang（Anti 末尾多出来的位点）
+  if (aCount > pairLen) {
+    h += '<div class="pair-row" style="margin-top:4px;"><span class="pair-label" style="color:#059669;">Overhang</span>';
+    for (var i=pairLen; i<aCount; i++) {
+      var t = anuc[i];
+      if (!t) continue;
+      var ohNum = i - pairLen + 1;
+      h += '<div class="pair-cell"><span class="pair-base" style="background:#ecfdf5;color:#065f46;">'+esc(t.base)+'</span><span class="pair-pos" style="color:#059669;">OH'+ohNum+'</span></div>';
+    }
+    h += '</div>';
+  }
+  
+  h += '</div>';
+  return h;
+}
+
+function makeResultHtml(aResult, sResult, label) {
+  var html = '<div class="result-block">';
+  if (label) html += '<div class="pair-header">'+esc(label)+'</div>';
+  
+  if (sResult) {
+    html += '<div style="margin-bottom:6px;"><b>Sense</b><span class="muted" style="margin-left:6px;">5\'→3\'</span></div>';
+    html += renderTokens(sResult.tokens);
+    html += '<div class="stats">裸碱基: '+esc(sResult.bases)+' ('+sResult.bases.length+'nt)</div>';
+    html += '<div style="margin:10px 0 6px;"><b>Antisense</b><span class="muted" style="margin-left:6px;">5\'→3\'</span></div>';
+  }
+  
+  html += renderTokens(aResult.tokens);
+  html += '<div class="stats">裸碱基: '+esc(aResult.bases)+' ('+aResult.bases.length+'nt)</div>';
+  html += '<div class="stats">'+makeStatStr(aResult.stats, aResult.bases.length)+'</div>';
+  html += '</div>';
+  
+  // 配对视图
+  if (sResult) {
+    html += buildPairView(sResult.tokens, aResult.tokens);
+  }
+  
+  return html;
+}
+
+function makeLegend() {
+  return '<div class="legend">' +
+    '<div class="legend-item"><span class="legend-swatch" style="background:#dbeafe;"></span>2\'-OMe</div>' +
+    '<div class="legend-item"><span class="legend-swatch" style="background:#fce7f3;"></span>2\'-F</div>' +
+    '<div class="legend-item"><span class="legend-swatch" style="background:#fef3c7;"></span>DNA</div>' +
+    '<div class="legend-item"><span class="legend-swatch" style="background:#d1fae5;"></span>VP</div>' +
+    '<div class="legend-item"><span class="legend-swatch" style="background:#ede9fe;"></span>C22</div>' +
+    '<div class="legend-item"><span class="legend-swatch" style="background:#f1f5f9;"></span>骨架/连接</div>' +
+    '</div>';
+}
+
+function runSingle() {
+  var anti = document.getElementById("antiInput").value.trim();
+  var sense = document.getElementById("senseInput").value.trim();
+  if (!anti) { alert("请填写 Antisense 序列"); return; }
+  var aResult = analyze(anti);
+  var sResult = sense ? analyze(sense) : null;
+  document.getElementById("singleResult").style.display="block";
+  document.getElementById("singleLegend").innerHTML = makeLegend();
+  document.getElementById("singleResultArea").innerHTML = makeResultHtml(aResult, sResult, "");
+  document.getElementById("singlePairView").innerHTML = "";
+}
+
+function runBatch() {
+  var text = document.getElementById("batchInput").value.trim();
+  if (!text) { alert("请输入数据"); return; }
+  var rows = text.split(/\r?\n/), data = [];
+  for (var i=0; i<rows.length; i++) {
+    var line = rows[i].trim(); if (!line) continue;
+    var cols = line.split(/\t/); if (cols.length < 2) cols = line.split(/\s{2,}/);
+    if (cols.length < 1) continue;
+    data.push({sense: cols.length>1 ? cols[0].trim() : "", anti: cols.length>1 ? cols[1].trim() : cols[0].trim()});
+  }
+  if (data.length > 1) { var f = data[0]; if ((f.sense.toLowerCase().includes("sense") || f.anti.toLowerCase().includes("anti"))) data.shift(); }
+  if (!data.length) { showMsg("batch","未解析到有效数据",true); return; }
+  var html = "";
+  for (var i=0; i<data.length; i++) {
+    if (!data[i].anti) continue;
+    var aR = analyze(data[i].anti);
+    var sR = data[i].sense ? analyze(data[i].sense) : null;
+    html += makeResultHtml(aR, sR, "第 " + (i+1) + " 组");
+  }
+  document.getElementById("batchResult").style.display="block";
+  document.getElementById("batchLegend").innerHTML = makeLegend();
+  document.getElementById("batchResultArea").innerHTML = html;
+}
+
+function showMsg(target,msg,err){
+  alert(msg);
+}
+
+function fillExample(){
+  document.getElementById("senseInput").value="mCmUmAmAmUmGfAmUfGfAfUmAmAmUmUmAmUmGmUmUmA";
+  document.getElementById("antiInput").value="VPmUfAmAmCmAfUmAmAmUmUmAmUmCfAmUfCmAmUmUmAmGmGmC";
+  runSingle();
+}
+function fillBatchExample(){
+  document.getElementById("batchInput").value=
+    "Sense(5'-3')\tAntisense(5'-3')\n"+
+    "mCmUmAmAmUmGfAmUfGfAfUmAmAmUmUmAmUmGmUmUmA\tVPmUfAmAmCmAfUmAmAmUmUmAmUmCfAmUfCmAmUmUmAmGmGmC\n"+
+    "mC*mU*mAmAmUmGfAmUfGfAfUmAmAmUmUmAmUmGmU*mU*mA\tVPmU*fA*mAmCmAfUmAmAmUmUmAmUmCfAmUfCmAmUmUmAmG*mG*mC\n"+
+    "mA*mC*mAmUmAmGfUmUfCfCfAmAmCmAmAmUmGmUmU*mA*mA\tVPmU*fU*mAmAmCfAmUfUfGmUmUmGmGfAmAfCmUmAmUmGmU*mC*mA";
+  runBatch();
+}
+</script>
+</body>
+</html>
