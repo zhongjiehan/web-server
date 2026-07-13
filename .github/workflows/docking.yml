@@ -1,0 +1,117 @@
+name: 分子对接提交
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_name:
+        description: '项目名称'
+        required: true
+        default: 'dock_project'
+      center_x:
+        description: 'center_x'
+        required: true
+        default: '0'
+      center_y:
+        description: 'center_y'
+        required: true
+        default: '0'
+      center_z:
+        description: 'center_z'
+        required: true
+        default: '0'
+      size_x:
+        description: 'size_x'
+        required: true
+        default: '22'
+      size_y:
+        description: 'size_y'
+        required: true
+        default: '22'
+      size_z:
+        description: 'size_z'
+        required: true
+        default: '22'
+      exhaustiveness:
+        description: 'Exhaustiveness'
+        required: true
+        default: '16'
+      num_modes:
+        description: 'Number of modes'
+        required: true
+        default: '9'
+      scoring:
+        description: 'Scoring function'
+        required: false
+        default: 'vina'
+
+jobs:
+  submit-docking:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.CLUSTER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ secrets.CLUSTER_PORT || '2222' }} ${{ secrets.CLUSTER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Submit to cluster
+        run: |
+          TS=$(date +%Y%m%d_%H%M%S)
+          JOB_NAME="${{ github.event.inputs.project_name }}_$TS"
+          OUT_DIR="run/HZJ/docking/$JOB_NAME"
+          USER="${{ secrets.CLUSTER_USER }}"
+          HOST="${{ secrets.CLUSTER_HOST }}"
+          PORT="${{ secrets.CLUSTER_PORT || '2222' }}"
+
+          # 生成sbatch脚本
+          cat > /tmp/job.sh << 'SHEOF'
+#!/bin/bash
+#SBATCH -p vip_gpu_4090_scxk410
+#SBATCH --gres=gpu:1
+#SBATCH -t 02:00:00
+#SBATCH --output=slurm-%j.out
+
+export PATH=/data/apps/cuda/12.8/bin:$PATH
+export LD_LIBRARY_PATH=/data/apps/cuda/12.8/lib64:$LD_LIBRARY_PATH
+
+echo "=== 对接开始: $(date) ==="
+echo "项目: PROJ_PLACEHOLDER"
+echo "盒子: CX_PLACEHOLDER CY_PLACEHOLDER CZ_PLACEHOLDER"
+echo "大小: SX_PLACEHOLDER SY_PLACEHOLDER SZ_PLACEHOLDER"
+
+cd ~/OUTDIR_PLACEHOLDER
+
+~/run/HZJ/bin/vina_gpu \
+  --lfile ligand.pdbqt \
+  --ffile receptor.maps.fld \
+  --nrun 20 --gbest 1 \
+  --resnam result
+
+echo "=== 对接完成: $(date) ==="
+ls -lh
+SHEOF
+
+          # 替换占位符
+          sed -i "s/PROJ_PLACEHOLDER/${{ github.event.inputs.project_name }}/g" /tmp/job.sh
+          sed -i "s|OUTDIR_PLACEHOLDER|$OUT_DIR|g" /tmp/job.sh
+          sed -i "s/CX_PLACEHOLDER/${{ github.event.inputs.center_x }}/g" /tmp/job.sh
+          sed -i "s/CY_PLACEHOLDER/${{ github.event.inputs.center_y }}/g" /tmp/job.sh
+          sed -i "s/CZ_PLACEHOLDER/${{ github.event.inputs.center_z }}/g" /tmp/job.sh
+          sed -i "s/SX_PLACEHOLDER/${{ github.event.inputs.size_x }}/g" /tmp/job.sh
+          sed -i "s/SY_PLACEHOLDER/${{ github.event.inputs.size_y }}/g" /tmp/job.sh
+          sed -i "s/SZ_PLACEHOLDER/${{ github.event.inputs.size_z }}/g" /tmp/job.sh
+
+          chmod +x /tmp/job.sh
+
+          # SSH到集群，创建目录并提交
+          ssh -o StrictHostKeyChecking=no -p $PORT ${USER}@${HOST} "mkdir -p ~/$OUT_DIR && sbatch /tmp/job.sh" < /dev/null
+
+          # 上传脚本到集群
+          scp -o StrictHostKeyChecking=no -P $PORT /tmp/job.sh ${USER}@${HOST}:~/$OUT_DIR/
+
+          # 提交
+          JOB_ID=$(ssh -o StrictHostKeyChecking=no -p $PORT ${USER}@${HOST} "cd ~/$OUT_DIR && sbatch job.sh" < /dev/null)
+          echo "Job submitted: $JOB_ID"
+          echo "Project: ${{ github.event.inputs.project_name }}"
+          echo "Output: ~/$OUT_DIR/"

@@ -275,8 +275,9 @@
         </div>
 
         <div class="action-row">
-          <button class="btn btn-primary" onclick="runDemoDocking()">提交本地对接任务</button>
+          <button class="btn btn-primary" onclick="submitToCluster()">🚀 提交到集群(GitHub Actions)</button>
           <button class="btn btn-soft" onclick="generateConfig()">生成Vina配置文件</button>
+          <button class="btn btn-outline" onclick="localStorage.removeItem('github_docking_token');alert('Token已清除，刷新页面可重新输入')">🔄 重置Token</button>
           <button class="btn btn-outline" onclick="document.getElementById('results').scrollIntoView({behavior:'smooth'})">查看输出区域</button>
         </div>
       </section>
@@ -520,6 +521,72 @@ window.addEventListener('load',()=>{
   generateConfig();
   setTimeout(()=>{ if(window.$3Dmol) loadDemoStructure(); }, 400);
 });
+
+
+// === GitHub Actions 提交 ===
+function submitToCluster(){
+  const project = document.getElementById('projectName').value || 'dock_project';
+  const cx = document.getElementById('centerX').value || 0;
+  const cy = document.getElementById('centerY').value || 0;
+  const cz = document.getElementById('centerZ').value || 0;
+  const sx = document.getElementById('sizeX').value || 22;
+  const sy = document.getElementById('sizeY').value || 22;
+  const sz = document.getElementById('sizeZ').value || 22;
+  const exhaust = document.getElementById('exhaustiveness').value || 16;
+  const modes = document.getElementById('numModes').value || 9;
+
+  // 读取GitHub Token（存localStorage）
+  let token = localStorage.getItem('github_docking_token');
+  if(!token){
+    token = prompt('请输入GitHub Personal Access Token\n(需有 repo 和 workflow 权限)\n生成地址: https://github.com/settings/tokens');
+    if(token) localStorage.setItem('github_docking_token', token);
+    else return;
+  }
+
+  const status = document.getElementById('jobStatus');
+  const box = document.getElementById('configBox');
+  status.textContent = '正在提交到GitHub...';
+  box.textContent = '';
+
+  fetch('https://api.github.com/repos/zhongjiehan/web-server/actions/workflows/docking.yml/dispatches', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/vnd.github.v3+json',
+      'Authorization': 'token ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      ref: 'main',
+      inputs: {
+        project_name: project,
+        center_x: String(cx),
+        center_y: String(cy),
+        center_z: String(cz),
+        size_x: String(sx),
+        size_y: String(sy),
+        size_z: String(sz),
+        exhaustiveness: String(exhaust),
+        num_modes: String(modes)
+      }
+    })
+  }).then(res => {
+    if(res.ok){
+      status.textContent = '✅ 已提交到集群队列';
+      box.innerHTML = '<strong>任务已提交！</strong><br><br>' +
+        '项目: ' + project + '<br>' +
+        '盒子: (' + cx + ', ' + cy + ', ' + cz + ')<br>' +
+        '大小: ' + sx + '×' + sy + '×' + sz + '<br><br>' +
+        '查看状态: <code>squeue -u $(whoami)</code><br>' +
+        '<a href="https://github.com/zhongjiehan/web-server/actions" target="_blank" style="color:#0f766e">GitHub Actions 运行记录 →</a>';
+    } else {
+      return res.text().then(t => { throw new Error(t); });
+    }
+  }).catch(e => {
+    status.textContent = '❌ 提交失败';
+    box.textContent = '错误: ' + e.message;
+  });
+}
+
 </script>
 </body>
 </html>
