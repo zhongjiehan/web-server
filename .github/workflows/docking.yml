@@ -36,12 +36,9 @@ jobs:
   submit:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.CLUSTER_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${{ secrets.CLUSTER_PORT }} ${{ secrets.CLUSTER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.CLUSTER_SSH_KEY }}
 
       - name: Submit job
         shell: bash
@@ -61,26 +58,34 @@ jobs:
           JOB_NAME="${PROJ}_${TS}"
           OUT_DIR="run/HZJ/docking/${JOB_NAME}"
 
-          cat > /tmp/job.sh << EOFSBATCH
+          ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "mkdir -p ~/${OUT_DIR}"
+
+          cat > /tmp/job.sh << EOFSB
           #!/bin/bash
           #SBATCH -p vip_gpu_4090_scxk410
           #SBATCH --gres=gpu:1
           #SBATCH -t 01:00:00
           #SBATCH --output=slurm-%j.out
-          export PATH=/data/apps/cuda/12.8/bin:\${PATH}
-          export LD_LIBRARY_PATH=/data/apps/cuda/12.8/lib64:\${LD_LIBRARY_PATH}
-          mkdir -p ~/${OUT_DIR}
           cd ~/${OUT_DIR}
           echo "=== Docking: ${PROJ} ==="
           echo "Box: ${CX} ${CY} ${CZ}  Size: ${SX} ${SY} ${SZ}"
-          ~/run/HZJ/bin/vina_gpu --lfile ligand.pdbqt --ffile receptor.maps.fld --nrun 20 --gbest 1 --resnam result
+          ~/run/HZJ/bin/vina \\
+            --receptor receptor.pdbqt \\
+            --ligand ligand.pdbqt \\
+            --center_x ${CX} \\
+            --center_y ${CY} \\
+            --center_z ${CZ} \\
+            --size_x ${SX} \\
+            --size_y ${SY} \\
+            --size_z ${SZ} \\
+            --exhaustiveness 8 \\
+            --num_modes 9 \\
+            --out result.pdbqt \\
+            --log docking.log
           echo "=== Done ==="
-          EOFSBATCH
+EOFSB
 
           chmod +x /tmp/job.sh
-          ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "mkdir -p ~/${OUT_DIR}" < /dev/null
           scp -o StrictHostKeyChecking=no -P ${PORT} /tmp/job.sh ${USER}@${HOST}:~/${OUT_DIR}/job.sh
-          ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "cd ~/${OUT_DIR} && sbatch job.sh" < /dev/null
-
+          ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "cd ~/${OUT_DIR} && sbatch job.sh"
           echo "Job submitted: ${JOB_NAME}"
-          echo "Output: ~/${OUT_DIR}/"
