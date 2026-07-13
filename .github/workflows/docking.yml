@@ -46,46 +46,5 @@ jobs:
           HOST: ${{ secrets.CLUSTER_HOST }}
           PORT: ${{ secrets.CLUSTER_PORT }}
           USER: ${{ secrets.CLUSTER_USER }}
-          CX: ${{ github.event.inputs.center_x }}
-          CY: ${{ github.event.inputs.center_y }}
-          CZ: ${{ github.event.inputs.center_z }}
-          SX: ${{ github.event.inputs.size_x }}
-          SY: ${{ github.event.inputs.size_y }}
-          SZ: ${{ github.event.inputs.size_z }}
-          PROJ: ${{ github.event.inputs.project_name }}
         run: |
-          TS=$(date +%Y%m%d_%H%M%S)
-          JOB_NAME="${PROJ}_${TS}"
-          OUT_DIR="run/HZJ/docking/${JOB_NAME}"
-
-          ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "mkdir -p ~/${OUT_DIR}"
-
-          cat > /tmp/job.sh << EOFSB
-          #!/bin/bash
-          #SBATCH -p vip_gpu_4090_scxk410
-          #SBATCH --gres=gpu:1
-          #SBATCH -t 01:00:00
-          #SBATCH --output=slurm-%j.out
-          cd ~/${OUT_DIR}
-          echo "=== Docking: ${PROJ} ==="
-          echo "Box: ${CX} ${CY} ${CZ}  Size: ${SX} ${SY} ${SZ}"
-          ~/run/HZJ/bin/vina \\
-            --receptor receptor.pdbqt \\
-            --ligand ligand.pdbqt \\
-            --center_x ${CX} \\
-            --center_y ${CY} \\
-            --center_z ${CZ} \\
-            --size_x ${SX} \\
-            --size_y ${SY} \\
-            --size_z ${SZ} \\
-            --exhaustiveness 8 \\
-            --num_modes 9 \\
-            --out result.pdbqt \\
-            --log docking.log
-          echo "=== Done ==="
-EOFSB
-
-          chmod +x /tmp/job.sh
-          scp -o StrictHostKeyChecking=no -P ${PORT} /tmp/job.sh ${USER}@${HOST}:~/${OUT_DIR}/job.sh
-          ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "cd ~/${OUT_DIR} && sbatch job.sh"
-          echo "Job submitted: ${JOB_NAME}"
+          ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "~/run/HZJ/bin/submit_dock.sh '${{ github.event.inputs.project_name }}' '${{ github.event.inputs.center_x }}' '${{ github.event.inputs.center_y }}' '${{ github.event.inputs.center_z }}' '${{ github.event.inputs.size_x }}' '${{ github.event.inputs.size_y }}' '${{ github.event.inputs.size_z }}'"
