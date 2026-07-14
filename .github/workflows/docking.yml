@@ -31,6 +31,10 @@ on:
         description: size_z
         required: true
         default: "22"
+      ligand_b64:
+        description: 配体文件(base64)
+        required: false
+        default: ""
 
 jobs:
   submit:
@@ -40,11 +44,33 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.CLUSTER_SSH_KEY }}
 
-      - name: Submit job
+      - name: Submit docking
         shell: bash
         env:
           HOST: ${{ secrets.CLUSTER_HOST }}
           PORT: ${{ secrets.CLUSTER_PORT }}
           USER: ${{ secrets.CLUSTER_USER }}
+          PROJ: ${{ github.event.inputs.project_name }}
+          CX: ${{ github.event.inputs.center_x }}
+          CY: ${{ github.event.inputs.center_y }}
+          CZ: ${{ github.event.inputs.center_z }}
+          SX: ${{ github.event.inputs.size_x }}
+          SY: ${{ github.event.inputs.size_y }}
+          SZ: ${{ github.event.inputs.size_z }}
+          LIGAND: ${{ github.event.inputs.ligand_b64 }}
         run: |
-          ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "~/run/HZJ/bin/submit_dock.sh '${{ github.event.inputs.project_name }}' '${{ github.event.inputs.center_x }}' '${{ github.event.inputs.center_y }}' '${{ github.event.inputs.center_z }}' '${{ github.event.inputs.size_x }}' '${{ github.event.inputs.size_y }}' '${{ github.event.inputs.size_z }}'"
+          TS=$(date +%Y%m%d_%H%M%S)
+          JOB_NAME="${PROJ}_${TS}"
+          OUT_DIR="run/HZJ/docking/${JOB_NAME}"
+
+          ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "mkdir -p ~/${OUT_DIR}"
+
+          if [ -n "${LIGAND}" ]; then
+            echo "${LIGAND}" | base64 -d > /tmp/ligand.pdbqt
+            scp -o StrictHostKeyChecking=no -P ${PORT} /tmp/ligand.pdbqt ${USER}@${HOST}:~/${OUT_DIR}/ligand.pdbqt
+          fi
+
+          ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "~/run/HZJ/bin/submit_dock.sh '${PROJ}' '${CX}' '${CY}' '${CZ}' '${SX}' '${SY}' '${SZ}' '${OUT_DIR}'"
+
+          echo "Job: ${JOB_NAME}"
+          echo "Output: ~/${OUT_DIR}/"
