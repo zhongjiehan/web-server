@@ -31,6 +31,10 @@ on:
         description: size_z
         required: true
         default: "22"
+      receptor_b64:
+        description: 受体文件(base64)
+        required: false
+        default: ""
       ligand_b64:
         description: 配体文件(base64)
         required: false
@@ -57,6 +61,7 @@ jobs:
           SX: ${{ github.event.inputs.size_x }}
           SY: ${{ github.event.inputs.size_y }}
           SZ: ${{ github.event.inputs.size_z }}
+          RECEPTOR: ${{ github.event.inputs.receptor_b64 }}
           LIGAND: ${{ github.event.inputs.ligand_b64 }}
         run: |
           TS=$(date +%Y%m%d_%H%M%S)
@@ -64,6 +69,11 @@ jobs:
           OUT_DIR="run/HZJ/docking/${JOB_NAME}"
 
           ssh -o StrictHostKeyChecking=no -p ${PORT} ${USER}@${HOST} "mkdir -p ~/${OUT_DIR}"
+
+          if [ -n "${RECEPTOR}" ]; then
+            echo "${RECEPTOR}" | base64 -d > /tmp/receptor.pdbqt
+            scp -o StrictHostKeyChecking=no -P ${PORT} /tmp/receptor.pdbqt ${USER}@${HOST}:~/${OUT_DIR}/receptor.pdbqt
+          fi
 
           if [ -n "${LIGAND}" ]; then
             echo "${LIGAND}" | base64 -d > /tmp/ligand.pdbqt
