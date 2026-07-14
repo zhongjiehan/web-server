@@ -532,57 +532,78 @@ function submitToCluster(){
   const sx = document.getElementById('sizeX').value || 22;
   const sy = document.getElementById('sizeY').value || 22;
   const sz = document.getElementById('sizeZ').value || 22;
-  const exhaust = document.getElementById('exhaustiveness').value || 16;
-  const modes = document.getElementById('numModes').value || 9;
 
-  // 读取GitHub Token（存localStorage）
   let token = localStorage.getItem('github_docking_token');
   if(!token){
-    token = prompt('请输入GitHub Personal Access Token\n(需有 repo 和 workflow 权限)\n生成地址: https://github.com/settings/tokens');
+    token = prompt('请输入GitHub Personal Access Token');
     if(token) localStorage.setItem('github_docking_token', token);
     else return;
   }
 
   const status = document.getElementById('jobStatus');
   const box = document.getElementById('configBox');
-  status.textContent = '正在提交到GitHub...';
-  box.textContent = '';
+  status.textContent = '正在读取文件...';
 
-  fetch('https://api.github.com/repos/zhongjiehan/web-server/actions/workflows/docking.yml/dispatches', {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/vnd.github.v3+json',
-      'Authorization': 'token ' + token,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      ref: 'main',
-      inputs: {
-        project_name: project,
-        center_x: String(cx),
-        center_y: String(cy),
-        center_z: String(cz),
-        size_x: String(sx),
-        size_y: String(sy),
-        size_z: String(sz),
+  // 读取受体和配体文件
+  const receptorFile = document.getElementById('receptorFile').files[0];
+  const ligandFile = document.getElementById('ligandFile').files[0];
+  const readerRec = new FileReader();
+  const readerLig = new FileReader();
+  let recDone = false, ligDone = false;
+  let recB64 = '', ligB64 = '';
+
+  function trySubmit(){
+    if(!recDone || !ligDone) return;
+    status.textContent = '正在提交到集群...';
+
+    const inputs = {
+      project_name: project,
+      center_x: String(cx), center_y: String(cy), center_z: String(cz),
+      size_x: String(sx), size_y: String(sy), size_z: String(sz)
+    };
+    if(recB64) inputs.receptor_b64 = recB64;
+    if(ligB64) inputs.ligand_b64 = ligB64;
+
+    fetch('https://api.github.com/repos/zhongjiehan/web-server/actions/workflows/docking.yml/dispatches', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ ref: 'main', inputs: inputs })
+    }).then(res => {
+      if(res.ok){
+        status.textContent = '✅ 已提交到集群';
+        box.innerHTML = '任务已提交！<br>项目: ' + project + '<br>盒子: (' + cx + ', ' + cy + ', ' + cz + ')<br><a href="https://github.com/zhongjiehan/web-server/actions" target="_blank">查看进度 →</a>';
+      } else {
+        return res.text().then(t => { throw new Error(t); });
       }
-    })
-  }).then(res => {
-    if(res.ok){
-      status.textContent = '✅ 已提交到集群队列';
-      box.innerHTML = '<strong>任务已提交！</strong><br><br>' +
-        '项目: ' + project + '<br>' +
-        '盒子: (' + cx + ', ' + cy + ', ' + cz + ')<br>' +
-        '大小: ' + sx + '×' + sy + '×' + sz + '<br><br>' +
-        '查看状态: <code>squeue -u $(whoami)</code><br>' +
-        '<a href="https://github.com/zhongjiehan/web-server/actions" target="_blank" style="color:#0f766e">GitHub Actions 运行记录 →</a>';
-    } else {
-      return res.text().then(t => { throw new Error(t); });
-    }
-  }).catch(e => {
-    status.textContent = '❌ 提交失败';
-    box.textContent = '错误: ' + e.message;
-  });
+    }).catch(e => {
+      status.textContent = '❌ 提交失败';
+      box.textContent = '错误: ' + e.message;
+    });
+  }
+
+  if(receptorFile){
+    readerRec.onload = function(e){
+      recB64 = e.target.result.split(',')[1];
+      recDone = true;
+      trySubmit();
+    };
+    readerRec.readAsDataURL(receptorFile);
+  } else { recDone = true; }
+
+  if(ligandFile){
+    readerLig.onload = function(e){
+      ligB64 = e.target.result.split(',')[1];
+      ligDone = true;
+      trySubmit();
+    };
+    readerLig.readAsDataURL(ligandFile);
+  } else { ligDone = true; }
+
+  trySubmit();
 }
 
 </script>
