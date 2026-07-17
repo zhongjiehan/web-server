@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SUNNOVO 研发AI平台</title>
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link rel="shortcut icon" type="image/png" href="logo.png" />
+  <link rel="apple-touch-icon" href="logo.png" />
+  <style>
+    :root{
+      --bg:#f5f8fc;
+      --surface:#ffffff;
+      --surface-soft:#f9fbff;
+      --ink:#172033;
+      --muted:#5d6c82;
+      --light:#8b99ad;
+      --line:#e3eaf3;
+      --brand:#075d80;
+      --brand-2:#1178a5;
+      --brand-3:#10b7a5;
+      --brand-4:#ff8a00;
+      --blue-soft:#e9f6ff;
+      --teal-soft:#e7fffb;
+      --orange-soft:#fff4e3;
+      --purple-soft:#f4edff;
+      --green-soft:#effcf5;
+      --shadow:0 18px 48px rgba(26, 48, 78, .09);
+      --shadow-soft:0 8px 24px rgba(26, 48, 78, .06);
+      --radius:22px;
+      --radius-sm:15px;
+      --nav:244px;
+      --font:"Inter", "SF Pro Display", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      --bg-shift:0px;
+      --bg-shift-soft:0px;
+      --bg-glow-y:8%;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    html{scroll-behavior:smooth;}
+    body{
+      font-family:var(--font);
+      background:radial-gradient(circle at 82% 0%, rgba(16,183,165,.15), transparent 32%), radial-gradient(circle at 2% 8%, rgba(17,120,165,.13), transparent 34%), var(--bg);
+      color:var(--ink);
+      line-height:1.62;
+    }
+    a{text-decoration:none;color:inherit;}
+    ::selection{background:rgba(16,183,165,.25);}
+    .app{display:flex;min-height:100vh;}
+    .side{
+      position:fixed;left:0;top:0;width:var(--nav);height:100vh;
+      background:rgba(255,255,255,.86);border-right:1px solid rgba(227,234,243,.95);
+      backdrop-filter:blur(18px);z-index:20;padding:22px 18px;display:flex;flex-direction:column;
+    }
+    .brand-box{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+    .logo-mark{
+      width:48px;height:48px;border-radius:16px;background:#fff;border:1px solid var(--line);
+      display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 10px 24px rgba(7,93,128,.13);
+    }
+    .logo-mark img{width:100%;height:100%;object-fit:contain;padding:5px;}
+    .brand-title{font-size:16px;font-weight:900;letter-spacing:.2px;}
+    .brand-sub{font-size:11px;color:var(--light);margin-top:1px;letter-spacing:.2px;}
+    .nav-label{font-size:11px;font-weight:900;color:#9ba8ba;letter-spacing:1.8px;margin:10px 10px 8px;}
+    .nav{display:flex;flex-direction:column;gap:6px;}
+    .nav a{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;color:var(--muted);font-size:14px;font-weight:700;transition:.2s ease;}
+    .nav a:hover,.nav a.active{background:linear-gradient(135deg,#e9f7ff,#f0fffb);color:var(--brand);transform:translateX(2px);}
+    .nav small{margin-left:auto;background:#edf4fa;color:#6a7c91;border-radius:999px;padding:0 7px;font-size:10px;}
+    .nav-ico{width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;color:currentColor;flex:0 0 19px;}
+    .nav-ico svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .side-footer{margin-top:auto;border-top:1px solid var(--line);padding-top:16px;color:var(--light);font-size:12px;}
+    .status-dot{display:inline-block;width:8px;height:8px;background:#15c47e;border-radius:99px;margin-right:6px;box-shadow:0 0 0 4px rgba(21,196,126,.14);}
+    .main{margin-left:var(--nav);width:calc(100% - var(--nav));position:relative;min-height:100vh;isolation:isolate;}
+    .scroll-bg{position:fixed;left:var(--nav);right:0;top:0;bottom:0;z-index:0;pointer-events:none;overflow:hidden;background:linear-gradient(135deg,rgba(239,248,255,.98) 0%,rgba(250,252,255,.94) 45%,rgba(235,255,250,.95) 100%);}
+    .scroll-bg:before{content:"";position:absolute;inset:-18% -12% -12% -10%;background:radial-gradient(circle at 78% var(--bg-glow-y),rgba(16,183,165,.22),transparent 32%),radial-gradient(circle at 8% 18%,rgba(17,120,165,.18),transparent 30%),radial-gradient(circle at 86% 78%,rgba(255,138,0,.10),transparent 24%);transform:translate3d(0,var(--bg-shift),0);transition:transform .08s linear,background-position .08s linear;}
+    .scroll-bg:after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(7,93,128,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(7,93,128,.04) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(180deg,rgba(0,0,0,.5),rgba(0,0,0,.18) 44%,rgba(0,0,0,.36));transform:translate3d(0,var(--bg-shift-soft),0);}
+    .topbar{position:sticky;top:0;z-index:10;height:74px;background:rgba(245,249,253,.74);backdrop-filter:blur(20px) saturate(1.15);border-bottom:1px solid rgba(227,234,243,.78);display:flex;align-items:center;justify-content:space-between;padding:0 36px;}
+    .breadcrumb{font-size:13px;color:var(--light);font-weight:700;}
+    .breadcrumb strong{color:var(--brand);}
+    .global-search{position:relative;width:min(460px,42vw);}
+    .global-search input{width:100%;height:42px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:0 46px 0 18px;outline:none;font:inherit;font-size:14px;box-shadow:var(--shadow-soft);transition:.2s ease;}
+    .global-search input:focus{border-color:rgba(16,183,165,.72);box-shadow:0 0 0 4px rgba(16,183,165,.13), var(--shadow-soft);}
+    .global-search span{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--light);}
+    section{scroll-margin-top:94px;}
+    .container{max-width:1480px;margin:0 auto;padding:34px 34px 70px;position:relative;z-index:1;}
+    .hero{position:relative;overflow:hidden;border-radius:30px;background:linear-gradient(135deg,#064764 0%,#087299 45%,#0d9a8f 100%);padding:44px;color:#fff;box-shadow:0 28px 78px rgba(7,93,128,.26),inset 0 1px 0 rgba(255,255,255,.20);}
+    .hero:before{content:"";position:absolute;right:-118px;top:-130px;width:440px;height:440px;border-radius:50%;background:rgba(255,255,255,.12);}
+    .hero:after{content:"";position:absolute;right:68px;bottom:-180px;width:380px;height:380px;border-radius:50%;border:1px solid rgba(255,255,255,.22);}
+    .hero-inner{position:relative;z-index:1;display:grid;grid-template-columns:1.12fr .88fr;gap:30px;align-items:center;}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:800;margin-bottom:16px;}
+    .hero h1{font-size:40px;line-height:1.18;letter-spacing:-.8px;margin-bottom:14px;}
+    .hero p{max-width:830px;color:rgba(255,255,255,.84);font-size:16px;}
+    .hero-actions{margin-top:27px;display:flex;flex-wrap:wrap;gap:12px;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:10px 16px;font-size:13px;font-weight:850;border:1px solid transparent;transition:.2s ease;cursor:pointer;white-space:nowrap;font-family:inherit;}
+    .btn.primary{background:#fff;color:#075476;}
+    .btn.ghost{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.28);color:#fff;}
+    .btn.solid{background:linear-gradient(135deg,var(--brand),var(--brand-3));color:#fff;border:none;box-shadow:0 10px 24px rgba(7,93,128,.19);}
+    .btn.soft{background:var(--blue-soft);color:var(--brand);border:1px solid #cbeafe;}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.12);}
+    .feature-panel{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+    .feature-card{background:rgba(255,255,255,.13);border-radius:18px;padding:17px;border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(12px);}
+    .feature-card strong{display:block;font-size:15px;margin-bottom:6px;}
+    .feature-card span{font-size:12px;color:rgba(255,255,255,.79);display:block;line-height:1.55;}
+    .section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;margin:40px 0 18px;}
+    .section-head p{color:var(--muted);max-width:820px;margin-top:5px;font-size:14px;}
+    .section-kicker{font-size:12px;font-weight:950;letter-spacing:1.7px;color:var(--brand-3);text-transform:uppercase;margin-bottom:4px;}
+    .section-head h2{font-size:26px;letter-spacing:-.3px;}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.78));border:1px solid rgba(255,255,255,.72);box-shadow:0 14px 34px rgba(26,48,78,.075),inset 0 1px 0 rgba(255,255,255,.88);border-radius:var(--radius);transition:transform .24s ease,box-shadow .24s ease,border-color .24s ease,background .24s ease;position:relative;overflow:hidden;backdrop-filter:blur(16px) saturate(1.12);}
+    .card:not(.cluster-card):before{content:"";position:absolute;left:18px;right:18px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(16,183,165,.48),rgba(17,120,165,.38),transparent);opacity:.9;}
+    .card:hover{transform:translateY(-5px);box-shadow:0 22px 54px rgba(26,48,78,.12),inset 0 1px 0 rgba(255,255,255,.95);border-color:rgba(16,183,165,.28);background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,255,255,.84));}
+    .pad{padding:24px;}
+    .chat-card{grid-column:span 8;height:600px;min-height:560px;display:flex;flex-direction:column;overflow:hidden;}
+    .workflow-card{grid-column:span 4;min-height:500px;}
+    .login-card{grid-column:span 5;}
+    .db-summary-card{grid-column:span 7;}
+    .db-card,.model-card,.cluster-card,.role-card{grid-column:span 4;padding:22px;}
+    .wide-card{grid-column:span 8;}
+    .full-card{grid-column:span 12;}
+    .tagbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;}
+    .chip{display:inline-flex;align-items:center;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:12px;font-weight:800;padding:5px 10px;}
+    .chip.teal{background:var(--teal-soft);color:#008577;border-color:#bdeee6;}
+    .chat-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;flex:0 0 auto;}
+    .chat-head h3{font-size:18px;}
+    .mode-tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+    .mode-tabs button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:999px;padding:6px 10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:.2s ease;}
+    .mode-tabs button.active,.mode-tabs button:hover{background:var(--brand);color:#fff;border-color:var(--brand);}
+    .chat-workbench{flex:1 1 auto;display:grid;grid-template-columns:200px minmax(0,1fr);min-height:0;height:0;overflow:hidden;}
+    .chat-history-panel{border-right:1px solid var(--line);background:linear-gradient(180deg,#fbfdff,#f5f9fd);padding:16px;display:flex;flex-direction:column;gap:12px;min-height:0;overflow:hidden;}
+    .new-session-btn{width:100%;height:42px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--brand),var(--brand-3));color:#fff;font:inherit;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 10px 22px rgba(7,93,128,.18);transition:.2s ease;}
+    .new-session-btn:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(7,93,128,.24);}
+    .history-title{display:flex;align-items:center;justify-content:space-between;color:var(--light);font-size:12px;font-weight:950;letter-spacing:1px;text-transform:uppercase;margin-top:4px;}
+    .history-list{display:flex;flex-direction:column;gap:7px;overflow-y:auto;padding-right:2px;}
+    .history-item{display:flex;align-items:center;gap:8px;padding:10px 9px;border:1px solid transparent;border-radius:14px;color:var(--muted);background:transparent;cursor:pointer;transition:.18s ease;}
+    .history-item:hover{background:#fff;border-color:var(--line);color:var(--brand);}
+    .history-item.active{background:#eaf8ff;border-color:#cbeafe;color:var(--brand);box-shadow:0 6px 14px rgba(7,93,128,.08);}
+    .history-dot{width:8px;height:8px;border-radius:50%;background:#c8d5e3;flex:0 0 8px;}
+    .history-item.active .history-dot{background:var(--brand-3);box-shadow:0 0 0 4px rgba(16,183,165,.14);}
+    .history-name{flex:1;min-width:0;font-size:13px;font-weight:820;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .delete-chat{width:24px;height:24px;border:0;border-radius:9px;background:transparent;color:#9aa8ba;cursor:pointer;font-size:17px;line-height:1;opacity:.55;transition:.18s ease;}
+    .history-item:hover .delete-chat{opacity:1;}
+    .delete-chat:hover{background:#fff1f0;color:#d4380d;}
+    .chat-main-panel{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column;overflow:hidden;}
+
+    .messages{flex:1 1 0;height:0;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(180deg,#fbfdff 0%,#f6f9fc 100%);padding:16px 18px;scrollbar-width:thin;scrollbar-color:#c7d5e6 transparent;}
+    .messages::-webkit-scrollbar{width:8px;}
+    .messages::-webkit-scrollbar-track{background:transparent;}
+    .messages::-webkit-scrollbar-thumb{background:#c7d5e6;border-radius:999px;}
+    .messages::-webkit-scrollbar-thumb:hover{background:#9fb1c8;}
+    .msg{max-width:88%;border-radius:18px;padding:12px 15px;font-size:14px;margin-bottom:12px;white-space:pre-wrap;box-shadow:0 6px 16px rgba(26,48,78,.05);}
+    .msg.ai{background:#fff;border:1px solid var(--line);border-bottom-left-radius:6px;color:var(--ink);}
+    .msg.user{background:linear-gradient(135deg,var(--brand),#1486b3);color:#fff;margin-left:auto;border-bottom-right-radius:6px;}
+    .msg.system{background:var(--orange-soft);border:1px solid #ffe0a8;color:#8a4b00;}
+    .composer{padding:18px 22px;border-top:1px solid var(--line);background:#fff;flex:0 0 auto;}
+    .input-shell{border:1px solid var(--line);border-radius:18px;padding:12px;background:#fff;transition:.2s ease;}
+    .input-shell:focus-within{border-color:rgba(16,183,165,.72);box-shadow:0 0 0 4px rgba(16,183,165,.1);}
+    textarea{width:100%;border:0;resize:none;outline:none;font:inherit;font-size:14px;color:var(--ink);}
+    .composer-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:9px;margin-top:8px;}
+    .mini-note{font-size:12px;color:var(--light);}
+    .send{width:38px;height:38px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--brand),var(--brand-3));color:#fff;font-size:17px;cursor:pointer;box-shadow:0 8px 20px rgba(7,93,128,.22);transition:.2s ease;}
+    .send:hover{transform:translateY(-1px) scale(1.05);}
+    .timeline{display:grid;gap:10px;margin-top:14px;}
+    .step{display:grid;grid-template-columns:32px 1fr;gap:10px;align-items:start;padding:12px;border-radius:18px;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(241,249,255,.88));border:1px solid rgba(213,226,240,.9);box-shadow:0 8px 20px rgba(26,48,78,.045);transition:.2s ease;}
+    .step:hover{transform:translateX(3px);border-color:rgba(16,183,165,.28);box-shadow:0 12px 26px rgba(26,48,78,.075);}
+    .step-no{width:32px;height:32px;border-radius:13px;background:linear-gradient(135deg,var(--brand),var(--brand-3));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:950;}
+    .step h4{font-size:14px;margin-bottom:2px;}
+    .step p{font-size:13px;color:var(--muted);line-height:1.55;}
+    .field{margin:14px 0;}
+    .field label{display:block;font-size:12px;font-weight:900;color:var(--muted);margin-bottom:6px;}
+    .field input,.field select{width:100%;height:43px;border:1px solid var(--line);border-radius:13px;padding:0 12px;font:inherit;outline:none;background:#fff;color:var(--ink);}
+    .field input:focus,.field select:focus{border-color:var(--brand-3);box-shadow:0 0 0 4px rgba(16,183,165,.1);}
+    .login-actions{display:flex;gap:10px;margin-top:18px;}
+    .db-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:17px;}
+    .db-item{padding:16px;border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(241,249,255,.86));border:1px solid rgba(213,226,240,.9);box-shadow:0 8px 18px rgba(26,48,78,.045);transition:.2s ease;}
+    .db-item:hover{transform:translateY(-2px);border-color:rgba(16,183,165,.30);box-shadow:0 13px 28px rgba(26,48,78,.075);}
+    .db-item strong{display:block;font-size:14px;color:var(--brand);margin-bottom:4px;}
+    .db-item span{display:block;color:var(--muted);font-size:13px;line-height:1.55;}
+    .db-card h3,.model-card h3,.cluster-card h3,.role-card h3,.workflow-card h3,.login-card h3,.db-summary-card h3{font-size:17px;margin-bottom:8px;letter-spacing:-.1px;}
+    .db-card,.model-card,.role-card{background:linear-gradient(160deg,rgba(255,255,255,.93),rgba(248,252,255,.78));}
+    .db-card:hover h3,.model-card:hover h3,.role-card:hover h3{color:var(--brand);}
+    .model-card .stage,.cluster-card .section-kicker,.db-card .section-kicker{box-shadow:0 6px 16px rgba(26,48,78,.05);}
+    .db-card p,.model-card p,.cluster-card p,.role-card p,.db-summary-card p{font-size:13px;color:var(--muted);}
+    .db-links,.model-links{display:flex;gap:7px;margin-top:15px;align-items:center;}
+    .db-links{flex-wrap:wrap;}
+    .model-links{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;}
+    .model-links::-webkit-scrollbar{height:0;}
+    .tiny-link{display:inline-flex;align-items:center;justify-content:center;min-height:28px;border-radius:999px;border:1px solid rgba(213,226,240,.95);background:rgba(255,255,255,.86);color:var(--brand);font-size:12px;font-weight:850;padding:5px 10px;white-space:nowrap;transition:.2s ease;box-shadow:0 4px 10px rgba(26,48,78,.035);}
+    .tiny-link:hover{background:var(--blue-soft);transform:translateY(-1px);box-shadow:0 8px 18px rgba(26,48,78,.07);}
+    .tiny-link.local{color:#008577;background:var(--teal-soft);border-color:#bdeee6;}
+    .tiny-link.warn{color:#b45b00;background:var(--orange-soft);border-color:#ffd99d;}
+    .stage{display:inline-flex;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900;background:var(--blue-soft);color:var(--brand);margin-bottom:12px;}
+    .stage.hot{background:#fff1f0;color:#d4380d;}
+    .stage.mid{background:var(--orange-soft);color:#c76700;}
+    .stage.mgmt{background:var(--purple-soft);color:#7c3fb2;}
+    .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:13px;}
+    .tags span{font-size:11px;font-weight:780;color:#66758a;background:#f4f7fa;border:1px solid var(--line);border-radius:999px;padding:3px 9px;}
+    .cluster-card{min-height:242px;}
+    .cluster-card:before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:#6e7c8d;}
+    .cluster-card.phase1:before{background:var(--brand-3);}
+    .cluster-card.phase2:before{background:var(--brand-4);}
+    .cluster-card.platform:before{background:var(--brand);}
+    .cluster-card ul,.role-card ul{margin:12px 0 0 18px;color:var(--muted);font-size:13px;}
+    .cluster-card li,.role-card li{margin:5px 0;}
+    .role-card strong{color:var(--brand);}
+    .software-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px;}
+    .soft-box{background:linear-gradient(145deg,rgba(255,255,255,.95),rgba(241,249,255,.88));border:1px solid rgba(213,226,240,.9);border-radius:17px;padding:14px;box-shadow:0 8px 18px rgba(26,48,78,.045);transition:.2s ease;}
+    .soft-box:hover{transform:translateY(-2px);border-color:rgba(16,183,165,.28);box-shadow:0 12px 26px rgba(26,48,78,.075);}
+    .soft-box strong{display:block;font-size:14px;margin-bottom:4px;color:var(--brand);}
+    .soft-box span{font-size:12px;color:var(--muted);}
+    .mini-tool-card{padding:18px;min-height:180px;}
+    .feedback-card{grid-column:span 4;padding:24px;min-height:242px;}
+    .tool-hero{display:grid;grid-template-columns:56px 1fr;gap:14px;align-items:start;}
+    .tool-icon{width:56px;height:56px;border-radius:18px;background:linear-gradient(135deg,rgba(7,93,128,.12),rgba(16,183,165,.18));border:1px solid rgba(16,183,165,.22);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px rgba(7,93,128,.08);color:var(--brand);}
+    .tool-icon svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+    .tool-desc{color:var(--muted);font-size:13px;margin-top:8px;max-width:760px;}
+    .tool-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+    .tool-meta span{font-size:11px;font-weight:850;color:#5e7188;background:rgba(244,247,250,.86);border:1px solid rgba(213,226,240,.9);border-radius:999px;padding:4px 10px;}
+    .tool-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;}
+    .feedback-card textarea{width:100%;min-height:132px;border:1px solid rgba(213,226,240,.95);border-radius:18px;background:rgba(255,255,255,.92);padding:13px 14px;font:inherit;font-size:13px;color:var(--ink);resize:vertical;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.9);}
+    .feedback-card textarea:focus{border-color:rgba(16,183,165,.72);box-shadow:0 0 0 4px rgba(16,183,165,.10),inset 0 1px 0 rgba(255,255,255,.9);}
+    .feedback-actions{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap;}
+    .feedback-note{font-size:12px;color:var(--light);line-height:1.55;margin-top:10px;}
+    .feedback-status{display:none;font-size:12px;font-weight:850;border-radius:14px;padding:8px 11px;margin-top:12px;}
+    .feedback-status.ok{display:block;background:var(--green-soft);color:#087a46;border:1px solid #bfeccf;}
+    .feedback-status.warn{display:block;background:var(--orange-soft);color:#a65b00;border:1px solid #ffd99d;}
+    .no-results{display:none;background:#fff;border:1px dashed #ccd6e3;border-radius:var(--radius);padding:22px;margin-top:24px;color:var(--muted);text-align:center;}
+    .footer{position:relative;z-index:1;text-align:center;color:var(--light);font-size:13px;border-top:1px solid rgba(227,234,243,.78);padding:28px;background:rgba(255,255,255,.68);backdrop-filter:blur(16px);}
+    @media(max-width:1180px){.chat-card,.workflow-card,.login-card,.db-summary-card,.wide-card,.mini-tool-card,.feedback-card{grid-column:span 12}.db-card,.model-card,.cluster-card,.role-card{grid-column:span 6}.hero-inner{grid-template-columns:1fr}.software-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:840px){.chat-card{height:640px;}.chat-workbench{grid-template-columns:1fr}.chat-history-panel{border-right:0;border-bottom:1px solid var(--line);max-height:210px}.history-list{max-height:130px}.chat-card{min-height:auto}:root{--nav:0px}.side{display:none}.main{margin-left:0;width:100%}.topbar{padding:0 18px}.global-search{width:56vw}.container{padding:22px 16px 50px}.hero{padding:28px}.hero h1{font-size:30px}.db-card,.model-card,.cluster-card,.role-card,.mini-tool-card,.feedback-card{grid-column:span 12}.feature-panel,.db-list,.software-grid,.tool-hero{grid-template-columns:1fr}.section-head{flex-direction:column;align-items:flex-start}.login-actions{flex-direction:column}.btn{width:100%}.chat-head{align-items:flex-start;flex-direction:column}.model-links{overflow-x:auto;}.composer-row{align-items:flex-start;flex-direction:column}.send{align-self:flex-end}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand-box">
+      <div class="logo-mark"><img src="logo.png" alt="SUNNOVO Logo" /></div>
+      <div>
+        <div class="brand-title">阳光诺和AI平台</div>
+        <div class="brand-sub">SUNNOVO Research AI</div>
+      </div>
+    </div>
+    <div class="nav-label">平台导航</div>
+    <nav class="nav" id="sideNav">
+      <a href="#overview"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg></span>平台总览 <small>Home</small></a>
+      <a href="#assistant"><span class="nav-ico"><svg viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/><path d="M9 12h.01M15 12h.01"/><path d="M10 16h4"/></svg></span>诺和智能体 <small>AI</small></a>
+      <a href="#internal-db"><span class="nav-ico"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v10c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 10c0 1.7 3.1 3 7 3s7-1.3 7-3"/></svg></span>公司数据库 <small>Portal</small></a>
+      <a href="#database"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2Z"/><path d="M8 7h6M8 11h7M8 15h5"/></svg></span>研发资料库 <small>DB</small></a>
+      <a href="#models"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M12 3v18M4 8h16M4 16h16"/><circle cx="6" cy="8" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="12" cy="16" r="2"/></svg></span>AI模型矩阵 <small>Model</small></a>
+      <a href="#cluster"><span class="nav-ico"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01M12 10v4"/></svg></span>公司集群 <small>HPC</small></a>
+      <a href="#mini-tools"><span class="nav-ico"><svg viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"/><path d="M12 12 4.5 7.8M12 12l7.5-4.2M12 12v8.5"/><path d="M8.5 5.5 16 9.8v4.4l-3.8 2.2"/></svg></span>研发小程序 <small>Tool</small></a>
+    </nav>
+    <div class="side-footer"><span class="status-dot"></span>内部演示环境<br/>AI Agent · 数据库 · 小程序 · 算力平台</div>
+  </aside>
+
+  <main class="main">
+    <div class="scroll-bg" aria-hidden="true"></div>
+    <header class="topbar">
+      <div class="breadcrumb">SUNNOVO / <strong>研发AI平台</strong></div>
+      <div class="global-search">
+        <input id="globalSearch" type="search" placeholder="搜索智能体、数据库、模型、集群资源..." />
+        <span>⌕</span>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="overview" class="hero searchable" data-search="总览 阳光诺和 SUNNOVO 研发 AI 平台 数据底座 智能体 模型矩阵 集群 数据库">
+        <div class="hero-inner">
+          <div>
+            <div class="eyebrow">SUNNOVO AI Research Platform</div>
+            <h1>面向药物研发的AI工作台</h1>
+            <p>平台围绕研发人员的日常场景建设，提供智能问答、内部数据库访问、专业AI模型入口、计算任务提交和结果归档能力，支撑靶点发现、RNA药物、小分子设计、结构预测、分子对接、ADMET评估和项目决策。</p>
+            <div class="hero-actions">
+              <a class="btn primary" href="#assistant">开始使用智能体 →</a>
+              <a class="btn ghost" href="#internal-db">进入公司数据库</a>
+              <a class="btn ghost" href="#models">查看模型矩阵</a>
+              <a class="btn ghost" href="cluster_login.html" target="_blank" rel="noopener">登录公司集群</a>
+              <a class="btn ghost" href="#mini-tools">研发小程序</a>
+            </div>
+          </div>
+          <div class="feature-panel">
+            <div class="feature-card"><strong>研发知识统一检索</strong><span>整合项目资料、实验记录、序列结构、文献专利和外部数据库。</span></div>
+            <div class="feature-card"><strong>AI智能体辅助研发</strong><span>支持问答、总结、方案设计、数据分析、代码辅助和报告生成。</span></div>
+            <div class="feature-card"><strong>模型工具一站式使用</strong><span>连接公开工具、本地Docker服务和公司内部模型入口。</span></div>
+            <div class="feature-card"><strong>算力任务统一调度</strong><span>面向对接、MD、单细胞分析和模型推理提供GPU/CPU任务入口。</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="assistant">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">AI Agent Workspace</div>
+            <h2>诺和研发智能体</h2>
+            <p>研发人员可以直接输入问题，也可以指定任务类型。智能体会根据问题调用通用大模型、内部知识库、专业数据库或本地模型工具，输出可追溯、可复用的研发结果。</p>
+          </div>
+          <div class="tagbar"><span class="chip teal">DeepSeek已接入</span><span class="chip">文献解读</span><span class="chip">专利分析</span><span class="chip">实验方案</span></div>
+        </div>
+        <div class="grid">
+          <article class="card chat-card searchable" data-search="AI助手 聊天 RAG DeepSeek Dify Ollama vLLM 文献 专利 实验 数据分析 新建对话 历史对话 删除对话">
+            <div class="chat-head">
+              <h3>研发问答助手</h3>
+              <div class="mode-tabs" id="modeTabs">
+                <button class="active" data-mode="专家">专家</button><button data-mode="数据分析">数据分析</button><button data-mode="文献">文献</button><button data-mode="专利">专利</button><button data-mode="代码">代码</button>
+              </div>
+            </div>
+            <div class="chat-workbench">
+              <aside class="chat-history-panel">
+                <button class="new-session-btn" id="newChatBtn">＋ 新建对话</button>
+                <div class="history-title"><span>历史对话</span><span id="historyCount">0</span></div>
+                <div class="history-list" id="chatHistoryList"></div>
+              </aside>
+              <div class="chat-main-panel">
+                <div class="messages" id="messages"></div>
+                <div class="composer">
+                  <div class="input-shell">
+                    <textarea id="chatInput" placeholder="输入研发问题，例如：帮我设计一个IPF单细胞靶点发现流程..." rows="2"></textarea>
+                    <div class="composer-row">
+                      <span class="mini-note">当前模式：<b id="modeName">专家</b> · 已配置 DeepSeek API · 后续可切换本地模型/RAG</span>
+                      <button class="send" id="sendBtn">➤</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card workflow-card pad searchable" data-search="智能体 使用说明 AI Agent 数据库 本地docker slurm 队列 报告模板">
+            <div class="section-kicker">How to Use</div>
+            <h3>智能体使用方式</h3>
+            <div class="timeline">
+              <div class="step"><div class="step-no">1</div><div><h4>直接提出研发问题</h4><p>例如靶点发现、专利序列整理、结构预测、分子对接、ADMET预测或实验方案设计。</p></div></div>
+              <div class="step"><div class="step-no">2</div><div><h4>选择任务模式</h4><p>专家、数据分析、文献、专利和代码模式会使用不同提示词和输出格式。</p></div></div>
+              <div class="step"><div class="step-no">3</div><div><h4>连接数据与模型</h4><p>需要数据时进入公司数据库；需要计算时进入本地模型或提交到公司集群。</p></div></div>
+              <div class="step"><div class="step-no">4</div><div><h4>沉淀结果资产</h4><p>结构文件、计算结果、表格、报告和日志可回写数据库，方便项目复用。</p></div></div>
+              <div class="step"><div class="step-no">5</div><div><h4>形成标准化输出</h4><p>输出候选排序、证据链、风险点和下一步实验验证建议。</p></div></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="internal-db">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Internal Database Gateway</div>
+            <h2>公司数据库入口</h2>
+            <p>这里作为公司内部数据资产的统一入口，登录后可访问项目资料、实验记录、序列结构、计算结果、AI报告归档和专利库。正式上线时可接入公司账号体系与权限分级。</p>
+          </div>
+          <div class="tagbar"><span class="chip teal">账号登录</span><span class="chip">项目权限</span><span class="chip">结果归档</span></div>
+        </div>
+        <div class="grid">
+          <article class="card login-card pad searchable" data-search="公司数据库 账号 密码 登录 项目库 实验库 文件库 结果库 AI报告 专利库">
+            <div class="section-kicker">Login</div>
+            <h3>内部数据库登录</h3>
+            <p style="color:var(--muted);font-size:13px;margin-top:6px;">当前为展示入口，后续可对接公司数据库、NAS/对象存储、ELN/LIMS或自建知识库。</p>
+            <form id="dbLoginForm" action="sunnovo_internal_database_portal.html" method="get" target="_blank">
+              <div class="field"><label>账号</label><input name="username" placeholder="请输入公司账号" autocomplete="username" /></div>
+              <div class="field"><label>密码</label><input name="password" type="password" placeholder="请输入密码" autocomplete="current-password" /></div>
+              <div class="login-actions"><button type="submit" class="btn solid">登录数据库</button><a class="btn soft" href="#database">查看资料分类</a></div>
+            </form>
+          </article>
+          <article class="card db-summary-card pad searchable" data-search="内部数据库 内容 项目数据 实验记录 序列结构 计算结果 AI报告 专利库 专利 文献 竞品">
+            <div class="section-kicker">Data Assets</div>
+            <h3>数据库内容规划</h3>
+            <p>公司库重点承载研发项目全流程数据，不再把信息分散在个人电脑、微信群、Excel和临时文件夹里。每个项目可以围绕“靶点—分子—实验—计算—专利—报告—决策”形成完整证据链。</p>
+            <div class="db-list">
+              <div class="db-item"><strong>项目数据总览</strong><span>适应症、靶点、分子类型、负责人、阶段、里程碑、风险和Go/No-Go记录。</span></div>
+              <div class="db-item"><strong>实验记录</strong><span>体外活性、动物药效、毒理、PK/PD、组织分布和实验方案。</span></div>
+              <div class="db-item"><strong>序列与结构</strong><span>FASTA、PDB/mmCIF、SMILES/SDF、抗体/多肽/RNA序列和结构文件。</span></div>
+              <div class="db-item"><strong>计算结果</strong><span>Docking、MD、ADMET、单细胞分析、模型推理结果和自动报告。</span></div>
+              <div class="db-item"><strong>AI报告归档</strong><span>靶点证据、文献解读、专利分析、计算报告和项目汇报材料统一归档。</span></div>
+              <div class="db-item"><strong>专利库</strong><span>专利全文、权利要求、序列信息、同族专利、竞品布局和绕开分析。</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="database">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Data Foundation</div>
+            <h2>研发资料库与外部情报入口</h2>
+            <p>将常用数据库按研发证据链组织，方便后续接入RAG检索、自动报告和项目决策评分。</p>
+          </div>
+        </div>
+        <div class="grid">
+          <article class="card db-card searchable" data-search="靶点库 疾病库 OMIM GeneCards KEGG HPA GWAS PubMed DrugBank Open Targets Reactome">
+            <h3>靶点证据库</h3><p>疾病分型、基因/蛋白靶点、通路、表达谱、GWAS、文献和竞品靶点证据。</p><div class="db-links"><a class="tiny-link" href="https://www.omim.org" target="_blank">OMIM</a><a class="tiny-link" href="https://www.genecards.org" target="_blank">GeneCards</a><a class="tiny-link" href="https://platform.opentargets.org" target="_blank">Open Targets</a><a class="tiny-link" href="https://reactome.org" target="_blank">Reactome</a></div>
+          </article>
+          <article class="card db-card searchable" data-search="分子库 小分子 PubChem ZINC DrugBank RCSB IMGT LIPID MAPS siRNA mRNA 抗体 多肽">
+            <h3>分子与结构库</h3><p>小分子、核酸、抗体、多肽、递送材料和三维结构相关数据库。</p><div class="db-links"><a class="tiny-link" href="https://pubchem.ncbi.nlm.nih.gov" target="_blank">PubChem</a><a class="tiny-link" href="https://zinc.docking.org" target="_blank">ZINC</a><a class="tiny-link" href="https://www.rcsb.org" target="_blank">RCSB PDB</a><a class="tiny-link" href="https://www.imgt.org" target="_blank">IMGT</a></div>
+          </article>
+          <article class="card db-card searchable" data-search="实验库 毒性 药理 动物模型 PK PD ArrayExpress Protocol JAX">
+            <h3>实验与转化库</h3><p>动物模型、药理实验、毒理安全、PK/PD、组织分布和实验方案。</p><div class="db-links"><a class="tiny-link" href="https://www.jax.org" target="_blank">JAX</a><a class="tiny-link" href="https://www.ebi.ac.uk/biostudies/arrayexpress" target="_blank">ArrayExpress</a><a class="tiny-link" href="https://www.protocols.io" target="_blank">Protocols.io</a></div>
+          </article>
+          <article class="card db-card searchable" data-search="专利 文献 临床试验 竞品 管线 情报 PubMed Patents ClinicalTrials Pharmcube">
+            <h3>文献专利与竞品库</h3><p>文献、专利、临床试验、竞品管线、行业情报和政策动态。</p><div class="db-links"><a class="tiny-link" href="https://pubmed.ncbi.nlm.nih.gov" target="_blank">PubMed</a><a class="tiny-link" href="https://patents.google.com" target="_blank">Google Patents</a><a class="tiny-link" href="https://clinicaltrials.gov" target="_blank">ClinicalTrials</a></div>
+          </article>
+          <article class="card db-card searchable" data-search="通用AI工具 DeepSeek 豆包 文心一言 通义千问 Dify Ollama OpenWebUI">
+            <h3>通用AI工具</h3><p>用于文献精读、代码辅助、报告写作、知识库问答和内部智能体搭建。</p><div class="db-links"><a class="tiny-link" href="https://chat.deepseek.com" target="_blank">DeepSeek</a><a class="tiny-link" href="https://doubao.com" target="_blank">豆包</a><a class="tiny-link" href="https://tongyi.aliyun.com" target="_blank">通义</a><a class="tiny-link local" href="http://localhost" target="_blank">本地LLM</a></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="models">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">AI Model Matrix</div>
+            <h2>诺和AI研发模型矩阵</h2>
+            <p>每个方向保留推荐方法入口。当前用于演示和资料跳转，后续可将对应按钮替换为公司内网模型服务页面。</p>
+          </div>
+          <div class="tagbar"><span class="chip teal">模型入口</span><span class="chip">内网服务</span><span class="chip">集群任务</span></div>
+        </div>
+        <div class="grid">
+          <article class="card model-card searchable" data-search="单细胞 靶点发现 Geneformer scGPT IPF 肿瘤 炎症 纤维化 target discovery single cell">
+            <span class="stage hot">优先建设</span><h3>单细胞靶点发现模型</h3><p>面向IPF、肿瘤、炎症和纤维化，分析疾病/正常差异、细胞亚群、关键通路和候选靶点优先级。</p><div class="model-links"><a class="tiny-link" href="geneformer_single_cell_target_demo.html" target="_blank">Geneformer</a><a class="tiny-link" href="https://github.com/bowang-lab/scGPT" target="_blank">scGPT</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="RNA 靶向药物 siRNA ASO mRNA siDirect RNAfold LinearDesign Off-target">
+            <span class="stage hot">优先建设</span><h3>RNA靶向药物发现模型</h3><p>支持siRNA、ASO、mRNA方向的靶点筛选、序列设计、脱靶预测、免疫原性评估和递送适配。</p><div class="model-links"><a class="tiny-link" href="https://sidirect2.rnai.jp/" target="_blank">siDirect</a><a class="tiny-link" href="https://rna.tbi.univie.ac.at/cgi-bin/RNAWebSuite/RNAfold.cgi" target="_blank">RNAfold</a><a class="tiny-link" href="https://github.com/LinearDesignSoftware/LinearDesign" target="_blank">LinearDesign</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="疾病 靶点 知识图谱 RAG Open Targets Reactome PubMed 专利 竞品 evidence target KG">
+            <span class="stage">核心能力</span><h3>疾病靶点知识图谱模型</h3><p>整合文献、专利、GWAS、表达谱、通路和竞品管线证据，形成靶点证据链评分与适应症拓展建议。</p><div class="model-links"><a class="tiny-link" href="https://platform.opentargets.org/" target="_blank">Open Targets</a><a class="tiny-link" href="https://reactome.org/" target="_blank">Reactome</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="蛋白结构 复合物 AlphaFold Boltz Chai Protenix antibody peptide RNA complex structure prediction">
+            <span class="stage">核心能力</span><h3>蛋白结构与复合物预测模型</h3><p>用于蛋白、抗体、多肽、RNA和小分子复合物建模，辅助判断结合界面、关键残基和结构可行性。</p><div class="model-links"><a class="tiny-link" href="https://alphafoldserver.com/" target="_blank">AlphaFold</a><a class="tiny-link" href="https://boltz.bio/boltz2" target="_blank">Boltz-2</a><a class="tiny-link" href="https://github.com/bytedance/Protenix" target="_blank">Protenix</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="蛋白口袋 可成药性 P2Rank PrankWeb pocket Druggability 热点残基">
+            <span class="stage">核心能力</span><h3>蛋白口袋与可成药性预测模型</h3><p>基于PDB或AlphaFold结构识别结合口袋、热点残基、口袋体积、疏水性和小分子可成药性。</p><div class="model-links"><a class="tiny-link" href="https://prankweb.cz/" target="_blank">PrankWeb</a><a class="tiny-link" href="https://github.com/rdk/p2rank" target="_blank">P2Rank</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="小分子生成 优化 PocketXMol Pocket2Mol lead optimization SAR molecule generation">
+            <span class="stage">核心能力</span><h3>小分子生成与优化模型</h3><p>围绕指定靶点口袋生成新骨架或类似物，并结合活性、选择性、合成可及性和ADMET性质进行多目标优化。</p><div class="model-links"><a class="tiny-link" href="https://github.com/pengxingang/PocketXMol" target="_blank">PocketXMol</a><a class="tiny-link" href="https://github.com/pengxingang/pocket2mol" target="_blank">Pocket2Mol</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="分子对接 结合姿势 DiffDock GNINA Vina AutoDock docking pose scoring virtual screening">
+            <span class="stage hot">优先建设</span><h3>分子对接与结合姿势预测模型</h3><p>对候选化合物进行批量对接、结合构象预测、打分排序和相互作用可视化，服务虚拟筛选与命中确认。</p><div class="model-links"><a class="tiny-link" href="https://github.com/gcorso/DiffDock" target="_blank">DiffDock</a><a class="tiny-link" href="https://github.com/gnina/gnina" target="_blank">GNINA</a><a class="tiny-link" href="docking_vina_pose_demo.html" target="_blank">Vina</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="结合亲和力 Kd Ki IC50 Boltz DeepDTA DTA binding affinity protein ligand peptide antibody ranking">
+            <span class="stage">核心能力</span><h3>结合亲和力预测模型</h3><p>预测蛋白-小分子、蛋白-多肽、抗原-抗体等复合物结合强度，用于初筛、突变体比较和专利绕开评估。</p><div class="model-links"><a class="tiny-link" href="https://boltz.bio/boltz2" target="_blank">Boltz-2</a><a class="tiny-link" href="https://github.com/hkmztrk/DeepDTA" target="_blank">DeepDTA</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="ADMET 毒性 CYP hERG GNN XGBoost ADMETlab DeepChem 属性预测">
+            <span class="stage hot">优先建设</span><h3>ADMET与毒性预测模型</h3><p>评估吸收、分布、代谢、排泄、毒性、CYP风险、hERG风险和理化性质，降低后期成药性失败风险。</p><div class="model-links"><a class="tiny-link" href="https://admetlab3.scbdd.com/" target="_blank">ADMETlab</a><a class="tiny-link" href="https://deepchem.io/" target="_blank">DeepChem</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="抗体 多肽 蛋白设计 RFdiffusion ProteinMPNN LigandMPNN VHH scFv binder design">
+            <span class="stage mid">中期建设</span><h3>抗体/多肽/蛋白设计模型</h3><p>支持VHH、scFv、多肽、蛋白结合域设计，围绕特异性、亲和力、稳定性、免疫原性和可开发性进行筛选。</p><div class="model-links"><a class="tiny-link" href="https://github.com/RosettaCommons/RFdiffusion" target="_blank">RFdiffusion</a><a class="tiny-link" href="https://github.com/dauparas/ProteinMPNN" target="_blank">ProteinMPNN</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="递送系统 组织靶向 LNP ADC 肽偶联 组织分布 LipidMaps 递送材料 脱靶风险">
+            <span class="stage mid">中期建设</span><h3>递送系统与组织靶向模型</h3><p>面向LNP、ADC、肽偶联和组织靶向递送，分析材料组成、配体选择、组织分布和脱靶风险。</p><div class="model-links"><a class="tiny-link" href="https://www.lipidmaps.org" target="_blank">LIPID MAPS</a><a class="tiny-link" href="https://pubchem.ncbi.nlm.nih.gov" target="_blank">PubChem</a></div>
+          </article>
+          <article class="card model-card searchable" data-search="项目 Go No-Go 决策 风险评分 自动报告 里程碑 专利空间 竞品进展 研发管理">
+            <span class="stage mgmt">管理赋能</span><h3>项目Go/No-Go决策模型</h3><p>汇总靶点证据、分子质量、专利空间、实验结果和竞品进展，形成项目风险评分和下一步建议。</p><div class="model-links"><a class="tiny-link" href="https://clinicaltrials.gov" target="_blank">ClinicalTrials</a><a class="tiny-link" href="https://patents.google.com" target="_blank">Patents</a></div>
+          </article>
+        </div>
+      </section>
+
+      <section id="cluster">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Computing Platform</div>
+            <h2>公司集群介绍</h2>
+            <p>集群作为研发AI与CADD/AIDD的底层算力平台，采用GPU计算节点、CPU大内存节点、共享存储和统一调度的分层架构，支撑MD模拟、生信分析、结构预测、本地大模型服务和后续自研模型训练。</p>
+          </div>
+          <div class="tagbar"><span class="chip teal">GPU计算</span><span class="chip">CPU大内存</span><span class="chip">Slurm调度</span><span class="chip">容器化环境</span></div>
+        </div>
+        <div class="grid">
+          <article class="card cluster-card phase1 searchable" data-search="一期 研发AI计算池 RTX 5090 RTX PRO 6000 Blackwell GPU服务器 CPU节点 生信 管理 登录 存储">
+            <div class="section-kicker">Phase 1</div><h3>一期建设：研发AI计算池</h3><p>先满足公司内部模型部署、批量推理、MD/CADD测试、生信分析、结构预测和中等规模微调任务。</p>
+            <ul><li><strong>GPU服务器 × 4：</strong>RTX 5090 × 12 + RTX PRO 6000 Blackwell × 4</li><li><strong>CPU/基础设施节点 × 4：</strong>管理/登录节点 × 1，生信CPU大内存节点 × 2，共享存储节点 × 1</li><li><strong>一期总规模：</strong>8台服务器，16张GPU，支持多队列调度与任务隔离</li></ul>
+          </article>
+          <article class="card cluster-card phase2 searchable" data-search="二期 训练与大任务专区 H100 H200 训练服务器 CPU计算节点 高速存储 InfiniBand RoCE 多机多卡">
+            <div class="section-kicker">Phase 2</div><h3>二期扩展：训练与大任务专区</h3><p>根据项目量逐步增加数据中心级GPU，支撑自研模型训练、多机多卡并行、大规模MD和高强度研发任务。</p>
+            <ul><li><strong>训练GPU服务器 × 1–2：</strong>H100/H200 × 8–16 起步</li><li><strong>CPU计算节点 × 2–4：</strong>用于生信大数据、MD前后处理和非GPU型批量任务</li><li><strong>高速网络/存储：</strong>InfiniBand/RoCE + NVMe缓存 + 大容量归档存储</li></ul>
+          </article>
+          <article class="card cluster-card platform searchable" data-search="集群门户 登录公司集群 Slurm Docker Apptainer JupyterHub OpenWebUI Dify vLLM 任务队列 门户">
+            <div class="section-kicker">Cluster Portal</div><h3>集群门户与任务入口</h3><p>将命令行任务封装成网页入口，降低研发同事使用门槛，并统一管理任务提交、队列状态、日志和结果下载。</p>
+            <ul><li>在线提交：Docking、MD、ADMET、结构预测、单细胞分析</li><li>任务监控：队列状态、GPU/CPU占用、日志、结果下载</li><li>模型服务：Dify/OpenWebUI/vLLM/Ollama统一管理</li></ul>
+            <div class="db-links"><a class="btn solid" href="cluster_login.html" target="_blank" rel="noopener">登录公司集群 →</a><a class="btn soft" href="http://111.198.68.228:5000/#/signin" target="_blank" rel="noopener">登录公司NAS系统 →</a></div>
+          </article>
+        </div>
+        <div class="grid" style="margin-top:16px;">
+          <article class="card role-card searchable" data-search="GPU分工 CPU分工 RTX 5090 RTX PRO 6000 Blackwell H100 H200 生信 CPU大内存 CADD MD AIDD 模型训练">
+            <h3>资源分工</h3>
+            <ul><li><strong>RTX 5090节点：</strong>MD模拟、CADD开发测试、批量对接、结构预测和个人研发测试。</li><li><strong>RTX PRO 6000 Blackwell节点：</strong>本地大模型部署、长显存推理、RAG/Agent服务和LoRA/QLoRA微调。</li><li><strong>CPU大内存节点：</strong>单细胞/多组学、序列比对、数据库检索、数据预处理和结果汇总。</li></ul>
+          </article>
+          <article class="card role-card searchable" data-search="集群优势 多服务器 容错 单台故障 不影响 集群 分层管理 资源隔离 调度">
+            <h3>部署优势</h3>
+            <ul><li>多服务器分布式部署，容错性好，单台服务器故障不影响整个集群运行。</li><li>GPU与CPU资源按任务类型分层管理，避免MD、生信、推理和训练任务互相抢占。</li><li>一期低成本快速起步，二期可平滑扩展到H100/H200训练专区。</li></ul>
+          </article>
+          <article class="card role-card searchable" data-search="软件调度 Slurm Docker Apptainer PyTorch Transformers GROMACS AMBER RDKit AutoDock vLLM">
+            <h3>软件与调度</h3>
+            <div class="software-grid">
+              <div class="soft-box"><strong>调度</strong><span>Slurm分区与队列管理</span></div>
+              <div class="soft-box"><strong>容器</strong><span>Docker / Apptainer</span></div>
+              <div class="soft-box"><strong>CADD</strong><span>GROMACS / AMBER / RDKit / Vina</span></div>
+              <div class="soft-box"><strong>AI</strong><span>PyTorch / Transformers / vLLM</span></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="mini-tools">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Research Mini Apps</div>
+            <h2>研发小程序</h2>
+            <p>围绕同事日常研发工作中高频、重复、流程化的任务，逐步开发轻量级小工具。目标是把手工整理、格式转换、序列检查、结果比对和报告前处理等工作变成一键式流程，减少重复劳动。</p>
+          </div>
+          <div class="tagbar"><span class="chip teal">流程提效</span><span class="chip">序列处理</span><span class="chip">需求反馈</span><span class="chip">持续迭代</span></div>
+        </div>
+        <div class="grid">
+          <div style="grid-column:span 8;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-content:start;">
+          <article class="card mini-tool-card searchable" data-search="修饰序列 位点高亮 序列比对 ss as 专利 修饰 比对" style="padding:16px;">
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <div class="tool-icon" style="width:44px;height:44px;flex:0 0 44px;"><svg viewBox="0 0 24 24"><path d="M6 4h12v5H6z"/><path d="M6 15h12v5H6z"/><path d="M8 9v6M16 9v6"/><path d="M10 6h.01M14 6h.01M10 17h.01M14 17h.01"/></svg></div>
+              <div style="flex:1;min-width:0;">
+                <div class="section-kicker">Tool</div>
+                <h3 style="font-size:15px;margin-bottom:4px;">序列修饰比对工具（专利序列推荐）</h3>
+                <p style="font-size:12px;color:var(--muted);line-height:1.5;">专利/修饰序列的 ss/as 双链比对，高亮碱基差异、修饰差异和插入缺失，支持批量粘贴和 Excel 复制。</p>
+                <div class="tool-actions" style="margin-top:8px;"><a class="btn solid" href="tool_seq_align.html" target="_blank" rel="noopener">打开工具 →</a></div>
+              </div>
+            </div>
+          </article>
+          <article class="card mini-tool-card searchable" data-search="siRNA ASO 修饰序列 智慧芽 比对 位点高亮 序列差异 可视化 格式对比" style="padding:16px;">
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <div class="tool-icon" style="width:44px;height:44px;flex:0 0 44px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h18"/><path d="M7 7v10"/><path d="M12 7v10"/><path d="M17 7v10"/><path d="M2 17h18"/><path d="M22 11v6"/></svg></div>
+              <div style="flex:1;min-width:0;">
+                <div class="section-kicker">Tool</div>
+                <h3 style="font-size:15px;margin-bottom:4px;">序列修饰比对工具（订单/报告序列推荐）</h3>
+                <p style="font-size:12px;color:var(--muted);line-height:1.5;">订单写法 vs 报告写法的格式对比，验证两种表示方式是否等价。支持 siRNA 修饰可视化、配对校验和批量操作。</p>
+                <div class="tool-actions" style="margin-top:8px;"><a class="btn solid" href="sirna_sequence_aligner.html" target="_blank" rel="noopener">打开工具 →</a></div>
+              </div>
+            </div>
+          </article>
+          <article class="card mini-tool-card searchable" data-search="序列格式转化 修饰模板 批量 报告格式 订单 报告" style="padding:16px;">
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <div class="tool-icon" style="width:44px;height:44px;flex:0 0 44px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M3 16v5h5"/><path d="M16 21h5v-5"/><path d="M12 8v8"/><path d="M8 12h8"/></svg></div>
+              <div style="flex:1;min-width:0;">
+                <div class="section-kicker">Tool</div>
+                <h3 style="font-size:15px;margin-bottom:4px;">序列格式转化和生成</h3>
+                <p style="font-size:12px;color:var(--muted);line-height:1.5;">序列格式转换，允许批量转换。自定义修饰模板，批量应用到裸序列上，SS/AS 模板可分别设置，输出两列可直接粘贴回 Excel。</p>
+                <div class="tool-actions" style="margin-top:8px;"><a class="btn solid" href="sirna_format_converter.html" target="_blank" rel="noopener">打开工具 →</a></div>
+              </div>
+            </div>
+          </article>
+          <article class="card mini-tool-card searchable" data-search="分子可视化 3D Viewer 结构查看 SDF PDB SMILES 画板 3Dmol 化学结构" style="padding:16px;">
+            <div style="display:flex;gap:12px;align-items:flex-start;">
+              <div class="tool-icon" style="width:44px;height:44px;flex:0 0 44px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/><circle cx="12" cy="12" r="7"/><path d="M12 8v8"/><path d="M8 12h8"/></svg></div>
+              <div style="flex:1;min-width:0;">
+                <div class="section-kicker">Tool <span style="display:inline-block;padding:1px 5px;border-radius:4px;font-size:10px;background:#fff1f0;color:#d4380d;margin-left:4px;">正在优化中</span></div>
+                <h3 style="font-size:15px;margin-bottom:4px;">分子可视化 + 画板</h3>
+                <p style="font-size:12px;color:var(--muted);line-height:1.5;">3Dmol.js 网页版分子查看器，支持 SMILES/SDF/PDB/MOL2 输入、Canvas 画板绘图、多种显示模式和内置分子示例库。</p>
+                <div class="tool-actions" style="margin-top:8px;"><a class="btn solid" href="tool_mol_viewer.html" target="_blank" rel="noopener">打开工具 →</a></div>
+              </div>
+            </div>
+          </article>
+          </div>
+          <div style="grid-column:span 4;">
+          <article class="card feedback-card searchable" data-search="小程序需求 留言 提交 反馈 bug 改进 工作流程 自动化 工具开发 软件优化" style="padding:18px;min-height:auto;">
+            <div class="section-kicker">Request & Feedback</div>
+            <h3>小程序需求与问题反馈</h3>
+            <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">当前为内部测试版本，还未正式上线。如有需求、改进建议或功能 bug，请直接飞书联系韩中杰。</p>
+            <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">当前已上线：序列修饰比对工具 · siRNA序列校验工具 · 分子可视化工具（优化中）</p>
+            <div class="feedback-note">后续可接入公司数据库或后端表单，实现需求统一收集和流转。如有紧急问题，飞书直接找我。</div>
+          </article>
+          </div>
+        </div>
+      </section>
+
+      <div class="no-results" id="noResults">没有找到匹配内容，可以换一个关键词试试。</div>
+    </div>
+    <footer class="footer">© 2026 SUNNOVO 阳光诺和研发AI平台 · AI Agent / 数据库 / 模型矩阵 / 研发小程序 / 算力平台</footer>
+  </main>
+</div>
+
+<script>
+  const navLinks = [...document.querySelectorAll('#sideNav a')];
+  const sections = navLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  function onScroll(){
+    let current = sections[0]?.id;
+    sections.forEach(sec => { if(sec.getBoundingClientRect().top < 120) current = sec.id; });
+    navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + current));
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  function updateDynamicBg(){
+    const y = window.scrollY || 0;
+    document.documentElement.style.setProperty('--bg-shift', (-y * 0.055).toFixed(2) + 'px');
+    document.documentElement.style.setProperty('--bg-shift-soft', (-y * 0.025).toFixed(2) + 'px');
+    document.documentElement.style.setProperty('--bg-glow-y', (8 + Math.min(y * 0.012, 28)).toFixed(2) + '%');
+  }
+  window.addEventListener('scroll', updateDynamicBg, {passive:true});
+  updateDynamicBg();
+
+  const search = document.getElementById('globalSearch');
+  const items = [...document.querySelectorAll('.searchable')];
+  const noResults = document.getElementById('noResults');
+  search.addEventListener('input', () => {
+    const q = search.value.trim().toLowerCase();
+    let visible = 0;
+    items.forEach(el => {
+      const hay = (el.dataset.search || el.textContent).toLowerCase();
+      const show = !q || hay.includes(q);
+      el.style.display = show ? '' : 'none';
+      if(show) visible++;
+    });
+    noResults.style.display = (q && visible === 0) ? 'block' : 'none';
+  });
+
+  const modeTabs = document.getElementById('modeTabs');
+  const modeName = document.getElementById('modeName');
+  let currentMode = '专家';
+  modeTabs.addEventListener('click', (e) => {
+    if(e.target.tagName !== 'BUTTON') return;
+    [...modeTabs.querySelectorAll('button')].forEach(btn => btn.classList.remove('active'));
+    e.target.classList.add('active');
+    currentMode = e.target.dataset.mode || '专家';
+    modeName.textContent = currentMode;
+  });
+
+  const DEEPSEEK_API_KEY = '请替换为你的API Key';
+  const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
+  const DEEPSEEK_MODEL = 'deepseek-chat';
+  const SYSTEM_PROMPT = '你是阳光诺和（SUNNOVO）研发AI平台中的诺和研发AI助手。回答要面向药物研发场景，重点覆盖靶点发现、单细胞分析、RNA药物、小分子设计、结构预测、分子对接、ADMET、专利分析、实验方案和项目决策。回答中文为主，结构清晰，可直接用于公司内部讨论。';
+  const GREETING = '你好，我是诺和研发AI助手。可以帮你查询研发资料、解读文献/专利、设计实验方案、整理数据分析思路，也可以作为本地模型和公司集群的任务入口。';
+
+  const sendBtn = document.getElementById('sendBtn');
+  const chatInput = document.getElementById('chatInput');
+  const messages = document.getElementById('messages');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const chatHistoryList = document.getElementById('chatHistoryList');
+  const historyCount = document.getElementById('historyCount');
+
+  let chats = [];
+  let currentChatId = null;
+
+  function loadSavedChats(){
+    try{ chats = JSON.parse(localStorage.getItem('sunnovo_ai_chats') || '[]'); }catch(e){ chats = []; }
+    currentChatId = localStorage.getItem('sunnovo_current_chat');
+    if(!chats.length || !chats.some(c => c.id === currentChatId)) createChat(false);
+    renderHistory();
+    loadCurrentChat();
+  }
+
+  function saveChats(){
+    localStorage.setItem('sunnovo_ai_chats', JSON.stringify(chats));
+    localStorage.setItem('sunnovo_current_chat', currentChatId || '');
+  }
+
+  function createChat(render = true){
+    const id = 'chat_' + Date.now() + '_' + Math.random().toString(16).slice(2, 7);
+    const chat = {
+      id,
+      title: '新对话',
+      createdAt: new Date().toISOString(),
+      messages: [
+        {role:'system', content:SYSTEM_PROMPT},
+        {role:'assistant', content:GREETING}
+      ]
+    };
+    chats.unshift(chat);
+    currentChatId = id;
+    saveChats();
+    if(render){ renderHistory(); loadCurrentChat(); }
+    return chat;
+  }
+
+  function getCurrentChat(){
+    return chats.find(c => c.id === currentChatId) || chats[0] || createChat(false);
+  }
+
+  function renderHistory(){
+    chatHistoryList.innerHTML = '';
+    historyCount.textContent = chats.length;
+    chats.forEach(chat => {
+      const item = document.createElement('div');
+      item.className = 'history-item' + (chat.id === currentChatId ? ' active' : '');
+      item.innerHTML = `<span class="history-dot"></span><span class="history-name"></span><button class="delete-chat" title="删除对话">×</button>`;
+      item.querySelector('.history-name').textContent = chat.title || '新对话';
+      item.addEventListener('click', () => {
+        currentChatId = chat.id;
+        saveChats();
+        renderHistory();
+        loadCurrentChat();
+      });
+      item.querySelector('.delete-chat').addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteChat(chat.id);
+      });
+      chatHistoryList.appendChild(item);
+    });
+  }
+
+  function deleteChat(id){
+    chats = chats.filter(c => c.id !== id);
+    if(!chats.length){
+      createChat(false);
+    }else if(currentChatId === id){
+      currentChatId = chats[0].id;
+    }
+    saveChats();
+    renderHistory();
+    loadCurrentChat();
+  }
+
+  function loadCurrentChat(){
+    const chat = getCurrentChat();
+    messages.innerHTML = '';
+    chat.messages.forEach(m => {
+      if(m.role === 'assistant' || m.role === 'user') addMsg(m.content, m.role === 'assistant' ? 'ai' : 'user');
+    });
+  }
+
+  function addMsg(text, role){
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.textContent = text;
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+    return div;
+  }
+
+  async function askDeepSeek(chat){
+    const apiMessages = chat.messages.map((m, idx) => idx === 0
+      ? {role:'system', content: m.content + `\n\n当前任务模式：${currentMode}。请根据该模式组织答案。`}
+      : {role:m.role, content:m.content}
+    );
+    const payload = { model: DEEPSEEK_MODEL, messages: apiMessages, temperature: 0.7, stream: false };
+    const res = await fetch(DEEPSEEK_API_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + DEEPSEEK_API_KEY },
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok){
+      const errText = await res.text().catch(() => '');
+      throw new Error('DeepSeek API 请求失败：' + res.status + ' ' + errText.slice(0,160));
+    }
+    const data = await res.json();
+    return data.choices?.[0]?.message?.content || '没有收到模型返回内容。';
+  }
+
+  newChatBtn.addEventListener('click', () => createChat(true));
+
+  sendBtn.addEventListener('click', async () => {
+    const text = chatInput.value.trim();
+    if(!text) return;
+    const chat = getCurrentChat();
+    addMsg(text, 'user');
+    chat.messages.push({role:'user', content:text});
+    if(chat.title === '新对话') chat.title = text.length > 18 ? text.slice(0,18) + '…' : text;
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+    saveChats();
+    renderHistory();
+    const loading = addMsg('正在调用 DeepSeek，请稍候...', 'ai');
+    sendBtn.disabled = true;
+    try{
+      const answer = await askDeepSeek(chat);
+      loading.textContent = answer;
+      chat.messages.push({role:'assistant', content:answer});
+      saveChats();
+      renderHistory();
+    }catch(e){
+      loading.className = 'msg system';
+      loading.textContent = '当前浏览器没有成功连上 DeepSeek：' + e.message + '\n\n如果是浏览器跨域或公司网络限制，临时演示可以改用本地后端代理转发；页面结构和调用逻辑已经保留。';
+    }finally{
+      sendBtn.disabled = false;
+    }
+  });
+
+  chatInput.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendBtn.click(); }});
+  chatInput.addEventListener('input', () => {
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 150) + 'px';
+  });
+
+  loadSavedChats();
+
+  const toolFeedbackInput = document.getElementById('toolFeedbackInput');
+  const toolFeedbackBtn = document.getElementById('toolFeedbackBtn');
+  const toolFeedbackClear = document.getElementById('toolFeedbackClear');
+  const toolFeedbackStatus = document.getElementById('toolFeedbackStatus');
+  function showToolFeedbackStatus(text, type = 'ok'){
+    if(!toolFeedbackStatus) return;
+    toolFeedbackStatus.textContent = text;
+    toolFeedbackStatus.className = 'feedback-status ' + type;
+  }
+  toolFeedbackBtn?.addEventListener('click', () => {
+    const text = (toolFeedbackInput?.value || '').trim();
+    if(!text){
+      showToolFeedbackStatus('请先填写需求、改进建议或 bug 描述。', 'warn');
+      toolFeedbackInput?.focus();
+      return;
+    }
+    const record = {time:new Date().toLocaleString('zh-CN'), content:text};
+    const saved = JSON.parse(localStorage.getItem('sunnovo_tool_feedback') || '[]');
+    saved.unshift(record);
+    localStorage.setItem('sunnovo_tool_feedback', JSON.stringify(saved.slice(0,50)));
+    const subject = encodeURIComponent('研发小程序需求反馈');
+    const body = encodeURIComponent('提交时间：' + record.time + '
+
+需求/问题描述：
+' + text + '
+
+——来自 SUNNOVO 研发AI平台');
+    window.location.href = 'mailto:hanzhongjie@sun-novo.com?subject=' + subject + '&body=' + body;
+    showToolFeedbackStatus('已生成邮件草稿，并在本机浏览器保留一份记录。', 'ok');
+  });
+  toolFeedbackClear?.addEventListener('click', () => {
+    if(toolFeedbackInput) toolFeedbackInput.value = '';
+    showToolFeedbackStatus('输入框已清空。', 'ok');
+  });
+
+  document.getElementById('dbLoginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    window.open('sunnovo_internal_database_portal.html', '_blank', 'noopener');
+  });
+</script>
+</body>
+</html>
