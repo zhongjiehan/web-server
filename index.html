@@ -280,8 +280,11 @@
     .motion-ready .hero h1{animation:titleEnter .9s .08s cubic-bezier(.2,.8,.2,1) both;}
     .motion-ready .hero p,.motion-ready .hero-actions{animation:titleEnter .9s .15s cubic-bezier(.2,.8,.2,1) both;}
     .model-marquee{display:grid;gap:16px;margin-top:4px;overflow:hidden;position:relative;padding:4px 0 10px;mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 4%,#000 96%,transparent 100%);}
-    .model-lane{overflow:hidden;padding:2px 0 8px;}
+    .model-lane{overflow:hidden;padding:2px 0 8px;cursor:grab;touch-action:pan-y;user-select:none;-webkit-user-select:none;outline:none;}
+    .model-lane.is-dragging{cursor:grabbing;}
+    .model-lane:focus-visible{box-shadow:inset 0 0 0 2px rgba(16,183,165,.48);border-radius:20px;}
     .model-track{--lane-gap:16px;--lane-half-gap:8px;display:flex;gap:var(--lane-gap);width:max-content;animation:modelFlow 54s linear infinite;will-change:transform;}
+    .model-track.marquee-controlled{animation:none!important;}
     .model-lane-two .model-track{animation-duration:61s;animation-delay:-24s;}
     .model-marquee:hover .model-track,.model-marquee:focus-within .model-track{animation-play-state:paused;}
     .model-card{grid-column:auto;flex:0 0 340px;width:340px;min-height:224px;padding:22px;display:flex;flex-direction:column;transform:translateZ(0);}
@@ -489,7 +492,7 @@
           <div>
             <div class="section-kicker">AI Model Matrix</div>
             <h2>诺和AI研发模型矩阵</h2>
-            <p>每个方向保留推荐方法入口。当前用于演示和资料跳转，后续可将对应按钮替换为公司内网模型服务页面。</p>
+            <p>每个方向保留推荐方法入口。两行模型会自动向左循环；按住任意一行左右拖动，可以找回已经滑过的模型或快速查看后面的方向。</p>
           </div>
           <div class="tagbar"><span class="chip teal">模型入口</span><span class="chip">内网服务</span><span class="chip">集群任务</span></div>
         </div>
@@ -922,9 +925,10 @@
     }
   });
 
-  $$('.model-track').forEach(track => {
+  $$('.model-track').forEach((track, laneIndex) => {
     if(track.dataset.loopReady === 'true') return;
-    [...track.children].forEach(card => {
+    const originals = [...track.children];
+    originals.forEach(card => {
       const clone = card.cloneNode(true);
       clone.setAttribute('aria-hidden', 'true');
       clone.querySelectorAll('a,button,input,textarea,select').forEach(control => {
@@ -933,12 +937,131 @@
       track.appendChild(clone);
     });
     track.dataset.loopReady = 'true';
-  });
 
-  document.addEventListener('visibilitychange', () => {
-    $$('.model-track').forEach(track => {
-      track.style.animationPlayState = document.hidden ? 'paused' : '';
+    if(reduceMotion) return;
+    const lane = track.closest('.model-lane');
+    if(!lane) return;
+    lane.tabIndex = 0;
+    lane.setAttribute('role', 'group');
+    lane.setAttribute('aria-label', '模型滚动第 ' + (laneIndex + 1) + ' 行，可左右拖动或使用方向键浏览');
+    track.classList.add('marquee-controlled');
+
+    let loopWidth = 0;
+    let offset = 0;
+    let lastFrame = performance.now();
+    let dragging = false;
+    let pointerId = null;
+    let dragStartX = 0;
+    let dragStartOffset = 0;
+    let lastPointerX = 0;
+    let lastPointerTime = 0;
+    let velocity = 0;
+    let moved = false;
+    let suppressClick = false;
+    let resumeAt = 0;
+    const speed = laneIndex === 0 ? .039 : .035;
+
+    function normalize(value){
+      if(!loopWidth) return value;
+      while(value <= -loopWidth) value += loopWidth;
+      while(value > 0) value -= loopWidth;
+      return value;
+    }
+
+    function render(){
+      offset = normalize(offset);
+      track.style.transform = 'translate3d(' + offset.toFixed(2) + 'px,0,0)';
+    }
+
+    function measure(){
+      const firstOriginal = track.children[0];
+      const firstClone = track.children[originals.length];
+      if(!firstOriginal || !firstClone) return;
+      loopWidth = firstClone.offsetLeft - firstOriginal.offsetLeft;
+      if(!track.dataset.positioned){
+        offset = laneIndex === 0 ? 0 : -loopWidth * .42;
+        track.dataset.positioned = 'true';
+      }
+      render();
+    }
+
+    function tick(now){
+      const delta = Math.min(now - lastFrame, 48);
+      lastFrame = now;
+      if(!dragging && !document.hidden && now >= resumeAt){
+        offset -= speed * delta;
+      }
+      render();
+      requestAnimationFrame(tick);
+    }
+
+    function endDrag(event){
+      if(!dragging || (event.pointerId !== undefined && event.pointerId !== pointerId)) return;
+      dragging = false;
+      lane.classList.remove('is-dragging');
+      if(lane.hasPointerCapture?.(pointerId)) lane.releasePointerCapture(pointerId);
+      if(moved){
+        offset += velocity * 120;
+        suppressClick = true;
+        setTimeout(() => { suppressClick = false; }, 80);
+      }
+      resumeAt = performance.now() + 1100;
+      pointerId = null;
+      render();
+    }
+
+    lane.addEventListener('pointerdown', event => {
+      if(event.pointerType === 'mouse' && event.button !== 0) return;
+      dragging = true;
+      pointerId = event.pointerId;
+      dragStartX = event.clientX;
+      dragStartOffset = offset;
+      lastPointerX = event.clientX;
+      lastPointerTime = performance.now();
+      velocity = 0;
+      moved = false;
+      resumeAt = Infinity;
+      lane.classList.add('is-dragging');
+      lane.setPointerCapture?.(pointerId);
     });
+
+    lane.addEventListener('pointermove', event => {
+      if(!dragging || event.pointerId !== pointerId) return;
+      const now = performance.now();
+      const dx = event.clientX - dragStartX;
+      if(Math.abs(dx) > 5) moved = true;
+      const elapsed = Math.max(now - lastPointerTime, 1);
+      velocity = (event.clientX - lastPointerX) / elapsed;
+      lastPointerX = event.clientX;
+      lastPointerTime = now;
+      offset = dragStartOffset + dx;
+      render();
+      if(moved) event.preventDefault();
+    });
+
+    lane.addEventListener('pointerup', endDrag);
+    lane.addEventListener('pointercancel', endDrag);
+    lane.addEventListener('lostpointercapture', endDrag);
+    lane.addEventListener('click', event => {
+      if(!suppressClick) return;
+      event.preventDefault();
+      event.stopPropagation();
+      suppressClick = false;
+    }, true);
+    lane.addEventListener('keydown', event => {
+      if(event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      offset += event.key === 'ArrowLeft' ? -140 : 140;
+      resumeAt = performance.now() + 1100;
+      render();
+    });
+
+    requestAnimationFrame(() => {
+      measure();
+      lastFrame = performance.now();
+      requestAnimationFrame(tick);
+    });
+    window.addEventListener('resize', measure, {passive:true});
   });
 
   const modeTabs = $('#modeTabs');
