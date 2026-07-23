@@ -98,7 +98,7 @@ csusaaugAuGAUaauu(Ada)ugususa	VPusAsuugUaUCaucaAgCauuucsasg"></textarea>
     </div>
   </div>
   <label for="tplInput">裸序列（从 Excel 复制两列，SS	AS）</label>
-  <textarea id="tplInput" class="batch-input" placeholder="Sense裸	Antisense裸
+  <textarea id="tplInput" class="batch-input" oninput="runTemplate()" placeholder="Sense裸	Antisense裸
 CUAAUGAUGAUAAUUAUGUUA	UAACAUAAUUAUCAUCAUUAGGC
 ACAUAGUUCCAACAAUGUUAA	UUAACAUUGUUGGAACUAUGUCA"></textarea>
   <div class="option-row">
@@ -136,6 +136,7 @@ function parseSequence(seq) {
     var ch=seq[i];
     if(/\s/.test(ch)){i++;continue;}
     if(seq.startsWith("VP",i)){
+      if(seq[i+2]==="-"||seq[i+2]==="("||seq[i+2]==="["){tokens.push({base:"V",mod:"VP",backbone:false,text:"VP"});i+=2;continue;}
       var ve=i+2,vb="";
       while(ve<seq.length){
         var vc=seq[ve];if(isB(vc)){vb=vc.toUpperCase();ve++;break;}
@@ -179,7 +180,10 @@ function hasBB(t){return t.backbone||false;}
 function tokenToReport(t) {
   if (t.mod === "CONJ") return t.text;
   var b = t.base;
-  if (t.mod === "VP") return "VP" + (t.text.includes("m")?"m":"") + b + (t.backbone?"s":"");
+  if (t.mod === "VP") {
+    if (t.base==="V") return "VP" + (t.backbone?"s":"");
+    return "VP" + (t.text.includes("m")?"m":"") + b + (t.backbone?"s":"");
+  }
   if (t.mod === "C22") return t.text;
   if (t.mod === "DNA") return "-d" + b + "-";
   var modCode = t.mod === "OMe" ? "m" : (t.mod === "F" ? "f" : "");
@@ -189,7 +193,10 @@ function tokenToReport(t) {
 function tokenToOrder(t) {
   if (t.mod === "CONJ") return t.text;
   var b = t.base;
-  if (t.mod === "VP") return "VP" + (t.mod==="OMe"?b.toLowerCase():b) + (t.backbone?"s":"");
+  if (t.mod === "VP") {
+    if (t.base==="V") return "VP" + (t.backbone?"s":"");
+    return "VP" + (t.mod==="OMe"?b.toLowerCase():b) + (t.backbone?"s":"");
+  }
   if (t.mod === "C22") return t.text;
   if (t.mod === "DNA") return "-d" + b + "-";
   var chr = t.mod === "OMe" ? b.toLowerCase() : b;
@@ -267,9 +274,10 @@ function formatTokens(tokens, targetFormat) {
   if (targetFormat === "report") {
     return tokens.map(function(t){
       if (t.mod === "CONJ") return t.text;
-      if (t.mod === "VP") return "VP" + t.base + (t.backbone?"s":"");
+      if (t.mod === "VP") return "VP-" + t.base + (t.backbone?"s":"");
+      if (t.mod === "DNA") return "-d" + t.base + "-";
       if (t.mod === "C22") return t.text;
-      var mc = t.mod === "OMe" ? "m" : (t.mod === "F" ? "f" : (t.mod === "DNA" ? "d" : ""));
+      var mc = t.mod === "OMe" ? "m" : (t.mod === "F" ? "f" : "");
       return t.base + mc + (t.backbone?"s":"");
     }).join('');
   } else {
@@ -287,10 +295,33 @@ function runTemplate() {
   var tplAS = document.getElementById("tplASin").value.trim();
   var text = document.getElementById("tplInput").value.trim();
   var fmt = document.getElementById("tplFormat").value;
-  if (!tplSS && !tplAS) { alert("请输入至少一个模板序列"); return; }
+  if (!tplSS && !tplAS) {
+    // 无模板时使用默认规则
+    var rules = parseRules("AS:1:VP\nAS:5,7,12:DNA\nSS:1:Ims\nSS:-1:Im");
+    if (!text) { alert("请输入裸序列"); return; }
+    var rows = text.split(/\r?\n/).filter(function(l){return l.trim();});
+    if (rows.length>1) { var f=rows[0]; if (f.toLowerCase().includes("sense")||f.includes("5'")) rows.shift(); }
+    var out = "", ok = 0;
+    for (var i=0; i<rows.length; i++) {
+      var cols = rows[i].split("\t");
+      if (cols.length<2) cols = rows[i].split(/\s{2,}/);
+      if (cols.length<2) continue;
+      var ssBare = cols[0].trim().toUpperCase().replace(/[^ACGU]/g,'');
+      var asBare = cols[1].trim().toUpperCase().replace(/[^ACGU]/g,'');
+      var rs = formatRuleTokens(applyRulesToChain(ssBare, rules, "SS"), fmt);
+      var ra = formatRuleTokens(applyRulesToChain(asBare, rules, "AS"), fmt);
+      out += rs + "\t" + ra + "\n"; ok++;
+    }
+    document.getElementById("tplOutput").value = out.trim();
+    document.getElementById("tplSummary").textContent = "规则 4 条 | 成功 "+ok+" 条";
+    document.getElementById("tplResult").style.display="block";
+    document.getElementById("tplStatus").style.display="none";
+    return;
+  }
   if (!text) { alert("请输入裸序列"); return; }
   var patSS = tplSS ? extractPattern(tplSS) : null;
   var patAS = tplAS ? extractPattern(tplAS) : null;
+  var rules = parseRules("AS:1:VP\nAS:5,7,12:DNA\nSS:1:Ims\nSS:-1:Im");
   var rows = text.split(/\r?\n/).filter(function(l){return l.trim();});
   if (rows.length>1) { var f=rows[0]; if (f.toLowerCase().includes("sense")||f.includes("5'")) rows.shift(); }
   var out = "", fails = [], ok = 0;
@@ -301,12 +332,35 @@ function runTemplate() {
     var ssBare = cols[0].trim().toUpperCase().replace(/[^ACGU]/g,'');
     var asBare = cols[1].trim().toUpperCase().replace(/[^ACGU]/g,'');
     var rs = "", ra = "", skip = false;
-    if (patSS) { var ap = applyPattern(ssBare, patSS); if (!ap) { fails.push("SS第"+(i+1)+"行"); skip=true; } else rs = formatTokens(ap,fmt); }
-    if (patAS) { var ap = applyPattern(asBare, patAS); if (!ap) { fails.push("AS第"+(i+1)+"行"); skip=true; } else ra = formatTokens(ap,fmt); }
+    if (patSS || rules.length) {
+      var tplToks = patSS ? applyPattern(ssBare, patSS) : null;
+      var ruleToks = rules.length ? applyRulesToChain(ssBare, rules, "SS") : null;
+      if (tplToks === null) { fails.push("SS第"+(i+1)+"行"); skip=true; }
+      else {
+        if (ruleToks) for (var j=0; j<ruleToks.length; j++) {
+          if (ruleToks[j].mod !== 'OMe' || ruleToks[j].base !== ssBare[j]) tplToks[j] = ruleToks[j];
+        }
+        rs = formatTokens(tplToks, fmt);
+      }
+    }
+    if (patAS || rules.length) {
+      var tplToks = patAS ? applyPattern(asBare, patAS) : null;
+      var ruleToks = rules.length ? applyRulesToChain(asBare, rules, "AS") : null;
+      if (tplToks === null) { fails.push("AS第"+(i+1)+"行"); skip=true; }
+      else {
+        if (ruleToks) for (var j=0; j<ruleToks.length; j++) {
+          if (ruleToks[j].mod !== 'OMe' || ruleToks[j].base !== asBare[j]) tplToks[j] = ruleToks[j];
+        }
+        ra = formatTokens(tplToks, fmt);
+      }
+    }
     if (!skip) { out += rs + "\t" + ra + "\n"; ok++; }
   }
   document.getElementById("tplOutput").value = out.trim();
-  var s = "模板: "+(patSS?patSS.length+"nt(SS)":"")+(patSS&&patAS?" + ":"")+(patAS?patAS.length+"nt(AS)":"")+" | 成功 "+ok+" 条";
+  var s = "";
+  if (patSS||patAS) s += "模板: "+(patSS?patSS.length+"nt(SS)":"")+(patSS&&patAS?" + ":"")+(patAS?patAS.length+"nt(AS)":"")+" | ";
+  if (rules.length) s += "规则 "+rules.length+" 条 | ";
+  s += "成功 "+ok+" 条";
   if (fails.length) s += " | ⚠️ 跳过 "+fails.join(", ");
   document.getElementById("tplSummary").textContent = s;
   document.getElementById("tplResult").style.display="block";
@@ -320,8 +374,8 @@ function fillConvExample() {
   runConvert();
 }
 function fillTplExample() {
-  document.getElementById("tplSSin").value = "AmsGmsAmGmAmGmAfAmUfGfUfCmCmCmAmGmGmUmCmsAmsUm";
-  document.getElementById("tplASin").value = "AmsGmsAmUmGmAmCfUmAfCfAfGmAmCmAmUmUmAmAmsAmsUm";
+  document.getElementById("tplSSin").value = "";
+  document.getElementById("tplASin").value = "";
   document.getElementById("tplInput").value = "Sense裸\tAntisense裸\nCUAAUGAUGAUAAUUAUGUUA\tUAACAUAAUUAUCAUCAUUAG\nACAUAGUUCCAACAAUGUUAA\tUUAACAUUGUUGGAACUAUGU";
   document.getElementById("tplFormat").value = "report";
   runTemplate();
@@ -349,6 +403,141 @@ function showTplMsg(m,e){var n=document.getElementById("tplStatus");n.textConten
 document.addEventListener("keydown",function(e){
   if(e.key==="Tab"&&e.target.tagName==="TEXTAREA"){e.preventDefault();var t=e.target,s=t.selectionStart,val=t.value;t.value=val.slice(0,s)+"\t"+val.slice(t.selectionEnd);t.selectionStart=t.selectionEnd=s+1;}
 });
+// ===== 修饰规则 =====
+function parseRules(text) {
+  var rules = [];
+  var lines = text.split(/\r?\n/);
+  for (var i=0; i<lines.length; i++) {
+    var line = lines[i].trim();
+    if (!line || line.startsWith('//') || line.startsWith('#')) continue;
+    var parts = line.split(':');
+    if (parts.length === 2) { rules.push({chain:'both', pos:parts[0].trim(), mod:parts[1].trim()}); }
+    else if (parts.length === 3) { rules.push({chain:parts[0].trim().toUpperCase(), pos:parts[1].trim(), mod:parts[2].trim()}); }
+  }
+  return rules;
+}
+
+function parsePositions(posStr, length) {
+  var positions = [];
+  var parts = posStr.split(',');
+  for (var i=0; i<parts.length; i++) {
+    var p = parseInt(parts[i].trim());
+    if (isNaN(p)) continue;
+    if (p < 0) p = length + p + 1;
+    if (p >= 1 && p <= length) positions.push(p);
+  }
+  return positions;
+}
+
+function defaultMods(length) {
+  var mods = [];
+  for (var i=0; i<length; i++) mods.push({mod:'OMe', backbone:false});
+  return mods;
+}
+
+function applyRulesToChain(bareSeq, rules, chain) {
+  var bare = bareSeq.toUpperCase().replace(/[^ACGU]/g, '');
+  var mods = defaultMods(bare.length);
+  
+  for (var r=0; r<rules.length; r++) {
+    var rule = rules[r];
+    if (rule.chain !== 'both' && rule.chain !== chain) continue;
+    var positions = parsePositions(rule.pos, bare.length);
+    for (var p=0; p<positions.length; p++) {
+      var idx = positions[p] - 1;
+      if (idx < 0 || idx >= bare.length) continue;
+      var mod = rule.mod.toUpperCase();
+      if (mod === 'VP') { mods[idx] = {mod:'VP', backbone:false}; }
+      else if (mod === 'DNA' || mod === 'D') {
+        var base = bare[idx];
+        if (base === 'U') base = 'T';
+        mods[idx] = {mod:'DNA', backbone:false, overrideBase:base};
+      }
+      else if (mod === 'IMS') { mods[idx] = {mod:'OMe', backbone:true, overrideBase:'I'}; }
+      else if (mod === 'IM') { mods[idx] = {mod:'OMe', backbone:false, overrideBase:'I'}; }
+      else { mods[idx] = {mod:rule.mod, backbone:false}; }
+    }
+  }
+  
+  var tokens = [];
+  for (var i=0; i<bare.length; i++) {
+    var m = mods[i];
+    var base = m.overrideBase || bare[i];
+    if (m.mod === 'VP') { tokens.push({base:base,mod:'VP',backbone:m.backbone||false,text:'VP'+base+(m.backbone?'s':'')}); }
+    else if (m.mod === 'DNA') { tokens.push({base:base,mod:'DNA',backbone:false,text:'-d'+base+'-'}); }
+    else { tokens.push({base:base,mod:m.mod,backbone:m.backbone||false}); }
+  }
+  return tokens;
+}
+
+function runRules() {
+  var ruleText = document.getElementById("ruleInput").value.trim();
+  var ssText = document.getElementById("ruleSS").value.trim();
+  var asText = document.getElementById("ruleAS").value.trim();
+  var fmt = document.getElementById("ruleFormat").value;
+  
+  if (!ruleText) { alert("请输入规则"); return; }
+  if (!ssText && !asText) { alert("请输入至少一组序列"); return; }
+  
+  var rules = parseRules(ruleText);
+  if (!rules.length) { alert("未解析到有效规则"); return; }
+  
+  var ssLines = ssText ? ssText.split(/\r?\n/).filter(function(l){return l.trim();}) : [];
+  var asLines = asText ? asText.split(/\r?\n/).filter(function(l){return l.trim();}) : [];
+  
+  var outSS = "", outAS = "";
+  var okSS = 0, okAS = 0;
+  for (var i=0; i<ssLines.length; i++) {
+    var tokens = applyRulesToChain(ssLines[i], rules, 'SS');
+    outSS += formatRuleTokens(tokens, fmt) + "\n"; okSS++;
+  }
+  for (var i=0; i<asLines.length; i++) {
+    var tokens = applyRulesToChain(asLines[i], rules, 'AS');
+    outAS += formatRuleTokens(tokens, fmt) + "\n"; okAS++;
+  }
+  
+  document.getElementById("ruleOutputSS").value = outSS.trim();
+  document.getElementById("ruleOutputAS").value = outAS.trim();
+  document.getElementById("ruleSummary").textContent = "规则 "+rules.length+" 条 | Sense "+okSS+" 条 | Anti "+okAS+" 条";
+  document.getElementById("ruleResult").style.display="block";
+  document.getElementById("ruleStatus").style.display="none";
+}
+
+function formatRuleTokens(tokens, fmt) {
+  if (fmt === 'report') {
+    return tokens.map(function(t){
+      if (t.mod === 'CONJ') return t.text;
+      if (t.mod === 'VP') return 'VP-' + t.base + (t.backbone?'s':'');
+      if (t.mod === 'DNA') return '-d' + t.base + '-';
+      var mc = t.mod === 'OMe' ? 'm' : (t.mod === 'F' ? 'f' : '');
+      return t.base + mc + (t.backbone?'s':'');
+    }).join('');
+  }
+  return tokens.map(function(t){
+    if (t.mod === 'CONJ') return t.text;
+    if (t.mod === 'DNA') return '-d' + t.base + '-';
+    var chr = t.mod === 'OMe' ? t.base.toLowerCase() : t.base;
+    return chr + (t.backbone?'s':'');
+  }).join('');
+}
+
+function copyRuleResult() {
+  var ss=document.getElementById("ruleOutputSS"), as=document.getElementById("ruleOutputAS");
+  var ta = document.createElement("textarea"); ta.value = ss.value + "\n" + as.value; document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); showRuleMsg("✅ 已复制 SS + AS"); } catch(e) { showRuleMsg("❌ 复制失败", true); }
+  document.body.removeChild(ta);
+}
+function copyRuleSS() { var ta=document.getElementById("ruleOutputSS"); ta.select(); try{document.execCommand("copy");showRuleMsg("✅ 已复制 Sense");}catch(e){showRuleMsg("❌ 复制失败",true);} }
+function copyRuleAS() { var ta=document.getElementById("ruleOutputAS"); ta.select(); try{document.execCommand("copy");showRuleMsg("✅ 已复制 Antisense");}catch(e){showRuleMsg("❌ 复制失败",true);} }
+function showRuleMsg(m,e){var n=document.getElementById("ruleStatus");n.textContent=m;n.style.display="inline";n.className=e?"copy-notice error":"copy-notice";if(!e){clearTimeout(showRuleMsg._t);showRuleMsg._t=setTimeout(function(){n.style.display="none";},2500);}}
+
+function fillRuleExample() {
+  document.getElementById("ruleInput").value = "AS:1:VP\nAS:5,7,12:DNA\nSS:1:Ims\nSS:-1:Im";
+  document.getElementById("ruleSS").value = "CUAAUGAUGAUAAUUAUGUUA\nACAUAGUUCCAACAAUGUUAA";
+  document.getElementById("ruleAS").value = "UAACAUAAUUAUCAUCAUUAGGC\nUUAACAUUGUUGGAACUAUGUCA";
+  runRules();
+}
+
 </script>
 </body>
 </html>
